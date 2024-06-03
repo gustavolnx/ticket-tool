@@ -41,7 +41,13 @@ export default function Modal ({conteudo, close}){
                 <span>Solução: <i>{conteudo.solucaoChamado}</i></span>
 
                 </div>
+                <div className='row'>
+                <span>Data da Solução: <i>{new Date(conteudo.dataSolucao.seconds * 1000).toLocaleDateString()}</i></span>
+      
                 
+                </div>
+
+
                 {conteudo.complemento !== '' &&(
                     <>
                 

@@ -10,17 +10,23 @@ const SolutionModal = ({ ticketId, onClose, updateSolution }) => {
   const handleSaveSolution = async () => {
     try {
       const ticketRef = doc(db, 'chamados', ticketId);
-      await updateDoc(ticketRef, { solucaoChamado: selectedSolution });
 
-      updateSolution(ticketId, selectedSolution); 
+      await updateDoc(ticketRef, {
+        solucaoChamado: selectedSolution,
+        dataSolucao: selectedSolution !== 'Não solucionado' ? new Date() : null,
+        status: selectedSolution !== 'Não solucionado' ? 'Atendido' : 'Aberto', 
+      });
+
+      updateSolution(ticketId, selectedSolution, 'Atendido'); 
       toast.success("Chamado atualizado com sucesso");
       onClose();
+      window.location.reload(); 
     } catch (error) {
       console.error("Erro ao salvar solução:", error);
       toast.error('Erro ao atualizar chamado');
     }
   };
-
+  
   return (
     <div className="solution-modal">
       <div className="solution-modal-content">

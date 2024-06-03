@@ -50,6 +50,8 @@ export default function Dashboard() {
           createdFormat: format(doc.data().created.toDate(), 'dd/MM/yyyy'),
           status: doc.data().status,
           complemento: doc.data().complemento,
+          dataSolucao: doc.data().dataSolucao, 
+          horaSolucao: doc.data().horaSolucao,
         });
       });
 
@@ -90,6 +92,8 @@ export default function Dashboard() {
           createdFormat: format(doc.data().created.toDate(), 'dd/MM/yyyy'),
           status: doc.data().status,
           complemento: doc.data().complemento,
+          dataSolucao: doc.data().dataSolucao, 
+          horaSolucao: doc.data().horaSolucao,
         });
       });
 
