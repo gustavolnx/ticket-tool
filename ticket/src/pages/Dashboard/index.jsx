@@ -52,6 +52,7 @@ export default function Dashboard() {
           complemento: doc.data().complemento,
           dataSolucao: doc.data().dataSolucao, 
           horaSolucao: doc.data().horaSolucao,
+          tecnicoAtb: doc.data().tecnicoAtb,
         });
       });
 
@@ -94,6 +95,7 @@ export default function Dashboard() {
           complemento: doc.data().complemento,
           dataSolucao: doc.data().dataSolucao, 
           horaSolucao: doc.data().horaSolucao,
+          tecnicoAtb: doc.data().tecnicoAtb,
         });
       });
 
@@ -213,6 +215,7 @@ export default function Dashboard() {
                       Prioridade {sortBy === 'prioridade' && (sortOrder === 'asc' ? '▲' : '▼')}
                     </th>
                     <th scope="col">Cadastrado em</th>
+                    <th scope='col'>Técnico</th>
                     <th scope="col">#</th>
                   </tr>
                 </thead>
@@ -255,7 +258,10 @@ export default function Dashboard() {
                       </td>
                    
                       <td data-label="Cadastrado">{item.createdFormat}</td>
+                      <td data-label="Cadastrado">{item.tecnicoAtb}</td>
                       <td data-label="#">
+                        
+                        
                       <button className="action" style={{ backgroundColor: 'purple' }} onClick={() => handleOpenSolutionModal(item.id)}>
 
 <FiCrosshair color="#fff" size={17} />
