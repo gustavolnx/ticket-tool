@@ -30,6 +30,7 @@
         const [prioridade, setPrioridade] = useState('Normal');
         const [idCustomer, setIdCustomer] = useState(false);
         const [solucaoChamado, setSolucaoChamado] = useState('Não solucionado');
+        const [tecnicoAtb, setTecnicoAtb] = useState('');
 
 
         useEffect(()=>{
@@ -42,7 +43,11 @@
             snapshot.forEach((doc)=>{
                 lista.push({
                     id:doc.id,
-                    nomeFantasia: doc.data().nomeFantasia
+                    nomeFantasia: doc.data().nomeFantasia,
+                    nome: doc.data().nome,
+                    email: doc.data().email,
+           
+
                 })
             })
 
@@ -90,6 +95,8 @@
                 
 
                 let index = lista.findIndex(item=>item.id === snapshot.data().clienteId);
+                let tecnicoAtb = lista.findIndex(item=>item.id === snapshot.data().nome);
+
                 setCustomerSelected(index);
                 setIdCustomer(true);
 
@@ -111,6 +118,11 @@
 
         function handleChangePrioridadeSelect(e){
             setPrioridade(e.target.value);
+            console.log(e.target.value)
+        }
+
+        function handleTecnicoAtbSelect(e){
+            setTecnicoAtb(e.target.value);
             console.log(e.target.value)
         }
 
@@ -241,6 +253,24 @@
                             <input type="radio" name="radio" value="Atendido" className='radio' onChange={handleOptionChange} checked={status==='Atendido'}/> 
                             <span>Atendido</span>
                         </div>
+
+                        <label>Tecnico</label>
+                        <select value={tecnicoAtb} onChange={handleChangePrioridadeSelect}>
+
+                        {
+                                        customers.map((item,index)=>{
+                                            return(
+                                                <option key={item.id} value={index}>
+                                                    {item.nome}
+                                                </option>
+                                            )
+                                        
+                                        })
+                                    }
+                        
+
+
+                        </select>
                        
                         <label>Prioridade</label>
                         <select value={prioridade} onChange={handleChangePrioridadeSelect}>
