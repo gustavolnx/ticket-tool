@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../contexts/auth";
 import Header from "../../components/Header";
-import "./dashboard.css";
+import "./atendidos.css";
 import Title from "../../components/Title";
 import {
   FiPlus,
@@ -26,7 +26,7 @@ import SolutionModal from "../../components/SolutionModal";
 
 const listRef = collection(db, "chamados");
 
-export default function Dashboard() {
+export default function Atendidos() {
   const { logout } = useContext(AuthContext);
 
   const [chamados, setChamados] = useState([]);
@@ -65,7 +65,7 @@ export default function Dashboard() {
         });
       });
 
-      lista = lista.filter((chamado) => chamado.status !== "Atendido");
+      lista = lista.filter((chamado) => chamado.status == "Atendido");
 
       setChamados(sortTickets(lista)); // Atualizar estado com a lista filtrada
       setLastDocs(querySnapshot.docs[querySnapshot.docs.length - 1]);
@@ -117,7 +117,7 @@ export default function Dashboard() {
         });
       });
 
-      lista = lista.filter((chamado) => chamado.status !== "Atendido");
+      lista = lista.filter((chamado) => chamado.status == "Atendido");
 
       if (lista.length === 0) {
         setIsEmpty(true);
