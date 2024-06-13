@@ -37,18 +37,8 @@ export default function Modal ({conteudo, close}){
                     </span>
           
                 </div>
-                <div className="row">
-                <span>Solução: <i>{conteudo.solucaoChamado}</i></span>
-
-                </div>
-                <div className='row'>
-                <span>Data da Solução: <i>{new Date(conteudo.dataSolucao.seconds * 1000).toLocaleDateString()}</i></span>
-      
-                
-                </div>
-
-
-                {conteudo.complemento !== '' &&(
+        
+                 {conteudo.complemento !== '' &&(
                     <>
                 
                     <h3>Complemento</h3>
@@ -59,6 +49,16 @@ export default function Modal ({conteudo, close}){
                     </>
                 )}
               
+              <div className="row solution">
+                <span>Solução: <i>{conteudo.solucaoChamado}</i></span>
+
+                </div>
+            {conteudo.dataSolucao && ( // Renderiza apenas se dataSolucao existir
+            <div className="row">
+                <span>Data solução: </span>
+                <i>{new Date(conteudo.dataSolucao.seconds * 1000).toLocaleDateString()}</i>
+            </div>
+            )}
               
             </main>
         </div>
