@@ -65,7 +65,7 @@ export default function SigIn() {
           </button>
         </form>
 
-        <Link to="/">Fazer login</Link>
+        <Link to="/dashboard">Voltar ao dashboard</Link>
       </div>
     </div>
   );
