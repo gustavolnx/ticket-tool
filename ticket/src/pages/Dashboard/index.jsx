@@ -3,12 +3,14 @@ import { AuthContext } from "../../contexts/auth";
 import Header from "../../components/Header";
 import "./dashboard.css";
 import Title from "../../components/Title";
+import { toast } from "react-toastify";
 import {
   FiPlus,
   FiMessageSquare,
   FiSearch,
   FiEdit2,
   FiCrosshair,
+  FiUserPlus,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import {
@@ -18,6 +20,8 @@ import {
   limit,
   startAfter,
   query,
+  updateDoc,
+  doc,
 } from "firebase/firestore";
 import { db } from "../../services/firebaseConnection";
 import Modal from "../../components/Modal";
@@ -27,8 +31,8 @@ import SolutionModal from "../../components/SolutionModal";
 const listRef = collection(db, "chamados");
 
 export default function Dashboard() {
-  const { logout } = useContext(AuthContext);
-
+  const { logout, user } = useContext(AuthContext);
+  const userName = user ? user.nome : null;
   const [chamados, setChamados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEmpty, setIsEmpty] = useState(false);
@@ -67,12 +71,11 @@ export default function Dashboard() {
 
       lista = lista.filter((chamado) => chamado.status !== "Atendido");
 
-      setChamados(sortTickets(lista)); // Atualizar estado com a lista filtrada
+      setChamados(sortTickets(lista));
       setLastDocs(querySnapshot.docs[querySnapshot.docs.length - 1]);
       setLoading(false);
 
       if (lista.length === 0) {
-        // Verificar se a lista filtrada está vazia
         setIsEmpty(true);
       }
     }
@@ -204,6 +207,33 @@ export default function Dashboard() {
     });
   }
 
+  async function assignTicketToSelf(ticketId) {
+    if (!userName) {
+      toast.error("Você precisa estar logado para se atribuir a um chamado.");
+      return;
+    }
+
+    try {
+      const ticketRef = doc(db, "chamados", ticketId);
+
+      updateDoc(ticketRef, {
+        tecnicoAtb: userName,
+      });
+
+      setChamados((prevChamados) =>
+        prevChamados.map((chamado) =>
+          chamado.id === ticketId
+            ? { ...chamado, tecnicoAtb: userName }
+            : chamado
+        )
+      );
+
+      toast.success("Chamado atribuído a você com sucesso!");
+    } catch (error) {
+      console.error("Erro ao atribuir o chamado:", error);
+      toast.error("Erro ao atribuir o chamado.");
+    }
+  }
   if (loading) {
     return (
       <div>
@@ -249,6 +279,7 @@ export default function Dashboard() {
                   <tr>
                     <th scope="col">Cliente</th>
                     <th scope="col">Assunto</th>
+
                     <th scope="col" onClick={() => handleSort("status")}>
                       Status{" "}
                       {sortBy === "status" && (sortOrder === "asc" ? "▲" : "▼")}
@@ -272,6 +303,7 @@ export default function Dashboard() {
                     <tr key={index}>
                       <td data-label="Cliente">{item.cliente}</td>
                       <td data-label="Assunto">{item.assunto}</td>
+
                       <td data-label="Status">
                         <span
                           className="badge"
@@ -312,6 +344,17 @@ export default function Dashboard() {
                       <td data-label="#">
                         <button
                           className="action"
+                          style={{ backgroundColor: "#f6a935" }}
+                          onClick={() => assignTicketToSelf(item.id)}
+                          disabled={
+                            item.status === "Atendido" ||
+                            item.tecnicoAtb === userName
+                          }
+                        >
+                          <FiUserPlus color="#fff" size={17} />
+                        </button>
+                        <button
+                          className="action"
                           style={{ backgroundColor: "purple" }}
                           onClick={() => handleOpenSolutionModal(item.id)}
                         >
@@ -339,6 +382,7 @@ export default function Dashboard() {
                         >
                           <FiEdit2 color="#fff" size={17} />
                         </Link>
+                        {/* atribuir-se */}
                       </td>
                     </tr>
                   ))}
