@@ -11,6 +11,7 @@ import {
   FiEdit2,
   FiCrosshair,
   FiUserPlus,
+  FiUserCheck,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import {
@@ -44,6 +45,7 @@ export default function Dashboard() {
   const [sortOrder, setSortOrder] = useState("desc");
   const [showSolutionModal, setShowSolutionModal] = useState(false);
   const [selectedTicketId, setSelectedTicketId] = useState(null);
+  const isAdmin = user ? user.isAdmin : false; // Reference isAdmin here
 
   useEffect(() => {
     async function loadChamados() {
@@ -259,7 +261,12 @@ export default function Dashboard() {
         </Title>
 
         <>
-          {chamados.length === 0 ? (
+          {chamados.filter(
+            (item) =>
+              isAdmin ||
+              item.tecnicoAtb === userName ||
+              item.tecnicoAtb === "Não atribuído"
+          ).length === 0 ? (
             <div className="container dashboard">
               <span>Nenhum chamado registrado...</span>
               <Link to="/new" className="new">
@@ -299,93 +306,100 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {chamados.map((item, index) => (
-                    <tr key={index}>
-                      <td data-label="Cliente">{item.cliente}</td>
-                      <td data-label="Assunto">{item.assunto}</td>
+                  {chamados
+                    .filter(
+                      (item) =>
+                        user.isAdmin ||
+                        item.tecnicoAtb === userName ||
+                        item.tecnicoAtb === "Não atribuído"
+                    ) // Filter based on admin, assigned technician, or unassigned
+                    .map((item, index) => (
+                      <tr key={index}>
+                        <td data-label="Cliente">{item.cliente}</td>
+                        <td data-label="Assunto">{item.assunto}</td>
 
-                      <td data-label="Status">
-                        <span
-                          className="badge"
-                          style={{
-                            backgroundColor:
-                              item.status === "Aberto"
-                                ? "rgb(53, 131, 246)"
-                                : item.status === "Atendido"
-                                ? "#5cb85c"
-                                : "#ffcc00",
-                            textShadow: "1px 2px 0px #000",
-                          }}
-                        >
-                          {item.status}
-                        </span>
-                      </td>
-                      <td data-label="Prioridade">
-                        <span
-                          className="badge"
-                          style={{
-                            backgroundColor:
-                              item.prioridade === "Urgente"
-                                ? "#ff0000"
-                                : item.prioridade === "Moderada"
-                                ? "#FFCC00"
-                                : "#5cb85c",
-                            textShadow: "1px 2px 0px #000",
-                          }}
-                        >
-                          {item.prioridade}
-                        </span>
-                      </td>
+                        <td data-label="Status">
+                          <span
+                            className="badge"
+                            style={{
+                              backgroundColor:
+                                item.status === "Aberto"
+                                  ? "rgb(53, 131, 246)"
+                                  : item.status === "Atendido"
+                                  ? "#5cb85c"
+                                  : "#ffcc00",
+                              textShadow: "1px 2px 0px #000",
+                            }}
+                          >
+                            {item.status}
+                          </span>
+                        </td>
+                        <td data-label="Prioridade">
+                          <span
+                            className="badge"
+                            style={{
+                              backgroundColor:
+                                item.prioridade === "Urgente"
+                                  ? "#ff0000"
+                                  : item.prioridade === "Moderada"
+                                  ? "#FFCC00"
+                                  : "#5cb85c",
+                              textShadow: "1px 2px 0px #000",
+                            }}
+                          >
+                            {item.prioridade}
+                          </span>
+                        </td>
 
-                      <td data-label="Cadastrado">{item.createdFormat}</td>
-                      <td data-label="Cadastrado">
-                        {item.tecnicoAtb ? item.tecnicoAtb : "Não atribuído"}
-                      </td>
-                      <td data-label="#">
-                        <button
-                          className="action"
-                          style={{ backgroundColor: "#f6a935" }}
-                          onClick={() => assignTicketToSelf(item.id)}
-                          disabled={
-                            item.status === "Atendido" ||
-                            item.tecnicoAtb === userName
-                          }
-                        >
-                          <FiUserPlus color="#fff" size={17} />
-                        </button>
-                        <button
-                          className="action"
-                          style={{ backgroundColor: "purple" }}
-                          onClick={() => handleOpenSolutionModal(item.id)}
-                        >
-                          <FiCrosshair color="#fff" size={17} />
-                        </button>
-                        <button
-                          className="action"
-                          style={{ backgroundColor: "#3583f6" }}
-                          onClick={() => toggleModal(item)}
-                        >
-                          <FiSearch color="#fff" size={17} />
-                        </button>
+                        <td data-label="Cadastrado">{item.createdFormat}</td>
+                        <td data-label="Cadastrado">
+                          {item.tecnicoAtb ? item.tecnicoAtb : "Não atribuído"}
+                        </td>
+                        <td data-label="#">
+                          <button
+                            className="action"
+                            style={{ backgroundColor: "#f6a935" }}
+                            onClick={() => assignTicketToSelf(item.id)}
+                            disabled={
+                              item.status === "Atendido" ||
+                              item.tecnicoAtb === userName
+                            }
+                          >
+                            <FiUserPlus color="#fff" size={17} />
+                          </button>
+                          <button
+                            className="action"
+                            style={{ backgroundColor: "purple" }}
+                            onClick={() => handleOpenSolutionModal(item.id)}
+                          >
+                            <FiCrosshair color="#fff" size={17} />
+                          </button>
+                          <button
+                            className="action"
+                            style={{ backgroundColor: "#3583f6" }}
+                            onClick={() => toggleModal(item)}
+                          >
+                            <FiSearch color="#fff" size={17} />
+                          </button>
 
-                        {showSolutionModal && (
-                          <SolutionModal
-                            ticketId={selectedTicketId}
-                            onClose={() => setShowSolutionModal(false)}
-                            updateSolution={updateSolution}
-                          />
-                        )}
-                        <Link
-                          to={`/new/${item.id}`}
-                          className="action"
-                          style={{ backgroundColor: "#f6a935" }}
-                        >
-                          <FiEdit2 color="#fff" size={17} />
-                        </Link>
-                        {/* atribuir-se */}
-                      </td>
-                    </tr>
-                  ))}
+                          {showSolutionModal && (
+                            <SolutionModal
+                              ticketId={selectedTicketId}
+                              onClose={() => setShowSolutionModal(false)}
+                              updateSolution={updateSolution}
+                            />
+                          )}
+                          <Link
+                            to={`/new/${item.id}`}
+                            className="action"
+                            style={{ backgroundColor: "#f6a935" }}
+                          >
+                            <FiEdit2 color="#fff" size={17} />
+                          </Link>
+                          {/* atribuir-se */}
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
 

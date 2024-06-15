@@ -38,11 +38,14 @@ function AuthProvider({ children }) {
         const docRef = doc(db, "users", uid);
         const docSnap = await getDoc(docRef);
 
+        let isAdmin = docSnap.data().isAdmin || false;
+
         let data = {
           uid: uid,
           nome: docSnap.data().nome,
           email: value.user.email,
           avatarUrl: docSnap.data().avatarUrl,
+          isAdmin: isAdmin,
         };
         setUser(data);
         storageUser(data);
@@ -60,7 +63,7 @@ function AuthProvider({ children }) {
   const navigate = useNavigate();
 
   // cadastrar usuario
-  async function signUp(email, password, name) {
+  async function signUp(email, password, name, isAdmin = false) {
     setLoadingAuth(true);
 
     await createUserWithEmailAndPassword(auth, email, password)
@@ -70,6 +73,7 @@ function AuthProvider({ children }) {
         await setDoc(doc(db, "users", uid), {
           nome: name,
           avatarUrl: null,
+          isAdmin: isAdmin,
         }).then(() => {
           let data = {
             uid: uid,

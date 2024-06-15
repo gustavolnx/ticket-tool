@@ -9,13 +9,16 @@ export default function SigIn() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("tecnico"); // Default role is 'tecnico'
+  // const [isAdmin, setIsAdmin] = useState(false);
   const { signUp, loadingAuth } = useContext(AuthContext);
 
   async function handleSubmit(e) {
     e.preventDefault();
+    const isAdmin = role === "admin"; // Determine isAdmin based on role
 
     if (name !== "" && email !== "" && password !== "") {
-      await signUp(email, password, name);
+      await signUp(email, password, name, isAdmin);
     }
   }
 
@@ -46,6 +49,16 @@ export default function SigIn() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+
+          <label htmlFor="role"></label>
+          <select
+            id="role"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+          >
+            <option value="tecnico">Técnico</option>
+            <option value="admin">Admin</option>
+          </select>
 
           <button type="submit">
             {loadingAuth ? "Carregando" : "Cadastrar"}

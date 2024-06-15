@@ -9,6 +9,7 @@ import {
   FiSettings,
   FiThumbsUp,
   FiTrello,
+  FiUserPlus,
 } from "react-icons/fi";
 import "./header.css";
 
@@ -34,6 +35,10 @@ export default function Header() {
       <Link to="/customers">
         <FiUser color="#fff" size={24} />
         Clientes
+      </Link>
+      <Link to="/register">
+        <FiUserPlus color="#fff" size={24} />
+        Novo usuário
       </Link>
       <Link to="/profile">
         <FiSettings color="#fff" size={24} />

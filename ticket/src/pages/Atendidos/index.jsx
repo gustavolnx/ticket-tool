@@ -231,11 +231,7 @@ export default function Atendidos() {
         <>
           {chamados.length === 0 ? (
             <div className="container dashboard">
-              <span>Nenhum chamado registrado...</span>
-              <Link to="/new" className="new">
-                <FiPlus color="#fff" size={25} />
-                Novo chamado
-              </Link>
+              <span>Nenhum chamado atendido está atribuído a você...</span>
             </div>
           ) : (
             <>

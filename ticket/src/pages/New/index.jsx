@@ -37,6 +37,30 @@ export default function New() {
   const [idCustomer, setIdCustomer] = useState(false);
   const [solucaoChamado, setSolucaoChamado] = useState("Não solucionado");
   const [tecnicoAtb, setTecnicoAtb] = useState("Não atribuído");
+  const [TecnicosCadastrados, setTecnicosCadastrados] = useState([]); // State for TecnicosCadastrados
+  const [loadingTecnicosCadastrados, setLoadingTecnicosCadastrados] =
+    useState(true); // Loading state
+
+  useEffect(() => {
+    async function loadTecnicosCadastrados() {
+      try {
+        const usersCollection = collection(db, "users");
+        const querySnapshot = await getDocs(usersCollection);
+        const TecnicosCadastradosData = querySnapshot.docs
+          .map((doc) => ({ id: doc.id, nome: doc.data().nome })) // Extract id and name
+          .filter((user) => user.nome !== ""); // Filter out empty names
+
+        setTecnicosCadastrados(TecnicosCadastradosData);
+      } catch (error) {
+        console.error("Erro ao carregar técnicos:", error);
+        toast.error("Erro ao carregar técnicos."); // Display an error toast
+      } finally {
+        setLoadingTecnicosCadastrados(false); // Always set loading to false, even on error
+      }
+    }
+
+    loadTecnicosCadastrados();
+  }, []);
 
   useEffect(() => {
     async function loadCustomers() {
@@ -256,10 +280,18 @@ export default function New() {
 
             <label>Técnico</label>
             <select value={tecnicoAtb} onChange={handleChangeTecnicoSelect}>
-              <option value="Não atribuído">Não atribuído</option>
-              <option value="Gustavo Tavares">Gustavo Tavares</option>
-              <option value="Lucas Gianonne">Lucas Gianonne</option>
-              <option value="Flávio">Flávio</option>
+              {loadingTecnicosCadastrados ? (
+                <option value="">Carregando...</option>
+              ) : (
+                <>
+                  <option value="Não atribuído">Não atribuído</option>
+                  {TecnicosCadastrados.map((tecnicosList) => (
+                    <option key={tecnicosList.id} value={tecnicosList.nome}>
+                      {tecnicosList.nome}
+                    </option>
+                  ))}
+                </>
+              )}
             </select>
 
             <label>Complementos</label>
