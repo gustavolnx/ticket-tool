@@ -308,13 +308,6 @@ export default function Atendidos() {
                       <td data-label="#">
                         <button
                           className="action"
-                          style={{ backgroundColor: "purple" }}
-                          onClick={() => handleOpenSolutionModal(item.id)}
-                        >
-                          <FiCrosshair color="#fff" size={17} />
-                        </button>
-                        <button
-                          className="action"
                           style={{ backgroundColor: "#3583f6" }}
                           onClick={() => toggleModal(item)}
                         >

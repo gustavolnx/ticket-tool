@@ -13,7 +13,14 @@ function RoutesApp() {
   return (
     <Routes>
       <Route path="/" element={<SigIn />} />
-      <Route path="/register" element={<SignUp />} />
+      <Route
+        path="/register"
+        element={
+          <Private>
+            <SignUp />
+          </Private>
+        }
+      />
 
       <Route
         path="/dashboard"
