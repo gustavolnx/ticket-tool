@@ -86,7 +86,13 @@ export default function Dashboard() {
   }, []);
 
   function sortTickets(tickets) {
-    const priorityOrder = { Urgente: 3, Moderada: 2, Normal: 1 };
+    const priorityOrder = {
+      Critica: 5,
+      Urgente: 4,
+      Alta: 3,
+      Média: 2,
+      Baixa: 1,
+    };
 
     return [...tickets].sort((a, b) => {
       const priorityA = priorityOrder[a.prioridade] || 0;
@@ -199,7 +205,7 @@ export default function Dashboard() {
   }
 
   function sortTicketsByStatus(tickets) {
-    const statusOrder = { Atendido: 3, Progresso: 2, Aberto: 1 };
+    const statusOrder = { Critica: 5, Urgente: 4, Alta: 3, Média: 2, Baixa: 1 };
 
     return [...tickets].sort((a, b) => {
       const statusA = statusOrder[a.status] || 0;
@@ -339,9 +345,11 @@ export default function Dashboard() {
                             className="badge"
                             style={{
                               backgroundColor:
-                                item.prioridade === "Urgente"
+                                item.prioridade === "Urgente" ||
+                                item.prioridade === "Critica"
                                   ? "#ff0000"
-                                  : item.prioridade === "Moderada"
+                                  : item.prioridade === "Média" ||
+                                    item.prioridade === "Alta"
                                   ? "#FFCC00"
                                   : "#5cb85c",
                               textShadow: "1px 2px 0px #000",

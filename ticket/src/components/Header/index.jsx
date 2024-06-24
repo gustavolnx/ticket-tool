@@ -15,6 +15,7 @@ import "./header.css";
 
 export default function Header() {
   const { user } = useContext(AuthContext);
+  const isAdmin = user ? user.isAdmin : false;
 
   return (
     <div className="sidebar">
@@ -36,10 +37,13 @@ export default function Header() {
         <FiUser color="#fff" size={24} />
         Clientes
       </Link>
-      <Link to="/register">
-        <FiUserPlus color="#fff" size={24} />
-        Novo usuário
-      </Link>
+      {isAdmin && (
+        <Link to="/register">
+          <FiUserPlus color="#fff" size={24} />
+          Novo usuário
+        </Link>
+      )}
+
       <Link to="/profile">
         <FiSettings color="#fff" size={24} />
         Perfil

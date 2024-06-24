@@ -33,7 +33,7 @@ export default function New() {
   const [complemento, setComplemento] = useState("");
   const [assunto, setAssunto] = useState("Acesso remoto");
   const [status, setStatus] = useState("Aberto");
-  const [prioridade, setPrioridade] = useState("Normal");
+  const [prioridade, setPrioridade] = useState("Baixa");
   const [idCustomer, setIdCustomer] = useState(false);
   const [solucaoChamado, setSolucaoChamado] = useState("Não solucionado");
   const [tecnicoAtb, setTecnicoAtb] = useState("Não atribuído");
@@ -239,43 +239,26 @@ export default function New() {
               <option value="Visita Tecnica">Visita tecnica</option>
               <option value="Troca de aparelho">Troca de aparelho</option>
             </select>
-
             <label>Status</label>
-            <div className="status">
-              <input
-                type="radio"
-                name="radio"
-                value="Aberto"
-                className="radio"
-                onChange={handleOptionChange}
-                checked={status === "Aberto"}
-              />
-              <span>Em aberto</span>
-              <input
-                type="radio"
-                name="radio"
-                value="Progresso"
-                className="radio"
-                onChange={handleOptionChange}
-                checked={status === "Progresso"}
-              />
-              <span>Em progresso</span>
-              <input
-                type="radio"
-                name="radio"
-                value="Atendido"
-                className="radio"
-                onChange={handleOptionChange}
-                checked={status === "Atendido"}
-              />
-              <span>Atendido</span>
-            </div>
+
+            <select
+              name="status"
+              value={status}
+              onChange={handleOptionChange}
+              className="select-status"
+            >
+              <option value="Aberto">Em aberto</option>
+              <option value="Progresso">Em progresso</option>
+              <option value="Atendido">Atendido</option>
+            </select>
 
             <label>Prioridade</label>
             <select value={prioridade} onChange={handleChangePrioridadeSelect}>
-              <option value="Normal">Normal</option>
-              <option value="Moderada">Moderada</option>
+              <option value="Baixa">Baixa</option>
+              <option value="Média">Média</option>
+              <option value="Alta">Alta</option>
               <option value="Urgente">Urgente</option>
+              <option value="Critica">Critica</option>
             </select>
 
             <label>Técnico</label>
@@ -302,7 +285,7 @@ export default function New() {
               onChange={(e) => setComplemento(e.target.value)}
             />
 
-            <label>Solução</label>
+            {/* <label>Solução</label>
             <select value={solucaoChamado} onChange={handleChangeSolucaoSelect}>
               <option value="Não solucionado">Não solucionado</option>
               <option value="Troca do aparelho">Troca do aparelho</option>
@@ -310,7 +293,7 @@ export default function New() {
                 Reiniciar rede/aparelho
               </option>
               <option value="Outros">Outros</option>
-            </select>
+            </select> */}
 
             <button type="submit">Registrar</button>
           </form>

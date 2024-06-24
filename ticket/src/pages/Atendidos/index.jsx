@@ -27,8 +27,9 @@ import SolutionModal from "../../components/SolutionModal";
 const listRef = collection(db, "chamados");
 
 export default function Atendidos() {
-  const { logout } = useContext(AuthContext);
+  const { logout, user } = useContext(AuthContext);
 
+  const isAdmin = user ? user.isAdmin : false;
   const [chamados, setChamados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEmpty, setIsEmpty] = useState(false);
@@ -289,9 +290,11 @@ export default function Atendidos() {
                           className="badge"
                           style={{
                             backgroundColor:
-                              item.prioridade === "Urgente"
+                              item.prioridade === "Urgente" ||
+                              item.prioridade === "Critica"
                                 ? "#ff0000"
-                                : item.prioridade === "Moderada"
+                                : item.prioridade === "Média" ||
+                                  item.prioridade === "Alta"
                                 ? "#FFCC00"
                                 : "#5cb85c",
                             textShadow: "1px 2px 0px #000",
@@ -321,13 +324,16 @@ export default function Atendidos() {
                             updateSolution={updateSolution}
                           />
                         )}
-                        <Link
-                          to={`/new/${item.id}`}
-                          className="action"
-                          style={{ backgroundColor: "#f6a935" }}
-                        >
-                          <FiEdit2 color="#fff" size={17} />
-                        </Link>
+
+                        {isAdmin && (
+                          <Link
+                            to={`/new/${item.id}`}
+                            className="action"
+                            style={{ backgroundColor: "#f6a935" }}
+                          >
+                            <FiEdit2 color="#fff" size={17} />
+                          </Link>
+                        )}
                       </td>
                     </tr>
                   ))}
