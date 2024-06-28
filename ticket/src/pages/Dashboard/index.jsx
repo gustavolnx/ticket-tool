@@ -205,7 +205,7 @@ export default function Dashboard() {
   }
 
   function sortTicketsByStatus(tickets) {
-    const statusOrder = { Critica: 5, Urgente: 4, Alta: 3, Média: 2, Baixa: 1 };
+    const statusOrder = { Aberto: 1, "Em andamento": 2, Atendido: 3 };
 
     return [...tickets].sort((a, b) => {
       const statusA = statusOrder[a.status] || 0;

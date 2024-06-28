@@ -70,16 +70,14 @@ export default function New() {
           snapshot.forEach((doc) => {
             lista.push({
               id: doc.id,
-              nomeFantasia: doc.data().nomeFantasia,
+              pontoLocal: doc.data().pontoLocal,
             });
           });
 
           if (snapshot.docs.size === 0) {
             console.log("Nenhum dado encontrado");
             setLoadCustomer(false);
-            setCustomers([
-              { id: 1, nomeFantasia: "Nenhum cliente encontrado" },
-            ]);
+            setCustomers([{ id: 1, pontoLocal: "Nenhum cliente encontrado" }]);
             return;
           }
 
@@ -94,7 +92,7 @@ export default function New() {
         .catch((error) => {
           console.log("Deu erro", error);
           setLoadCustomer(false);
-          setCustomers([{ id: 1, nomeFantasia: "Fulano de tal" }]);
+          setCustomers([{ id: 1, pontoLocal: "Fulano de tal" }]);
         });
     }
     loadCustomers();
@@ -158,7 +156,7 @@ export default function New() {
       //   atualizando chamado
       const docRef = doc(db, "chamados", id);
       await updateDoc(docRef, {
-        cliente: customers[customerSelected].nomeFantasia,
+        cliente: customers[customerSelected].pontoLocal,
         clienteId: customers[customerSelected].id,
         assunto: assunto,
         status: status,
@@ -186,7 +184,7 @@ export default function New() {
 
     await addDoc(collection(db, "chamados"), {
       created: new Date(),
-      cliente: customers[customerSelected].nomeFantasia,
+      cliente: customers[customerSelected].pontoLocal,
       clienteId: customers[customerSelected].id,
       assunto: assunto,
       status: status,
@@ -226,7 +224,7 @@ export default function New() {
                 {customers.map((item, index) => {
                   return (
                     <option key={item.id} value={index}>
-                      {item.nomeFantasia}
+                      {item.pontoLocal}
                     </option>
                   );
                 })}
@@ -277,10 +275,10 @@ export default function New() {
               )}
             </select>
 
-            <label>Complementos</label>
+            <label>Descrição do problema</label>
             <textarea
               type="text"
-              placeholder="Descreva o problema (opcional)"
+              placeholder="Descreva o problema"
               value={complemento}
               onChange={(e) => setComplemento(e.target.value)}
             />
