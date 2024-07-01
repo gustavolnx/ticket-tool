@@ -1,0 +1,36 @@
+input,
+textarea,
+select {
+  margin-bottom: 1em;
+  padding: 0.7em;
+  border: 0;
+  border-radius: 5px;
+  max-width: 600px;
+}
+
+.container-block {
+  display: block;
+}
+
+.clientes-cadastrados {
+  padding-top: 1rem;
+  background-color: white;
+  border-radius: 2px;
+  padding-bottom: 1rem;
+  padding-left: 1rem;
+}
+
+.btn-cadastrarCliente {
+  float: right;
+  margin-bottom: 1.5em;
+  background-color: #83bf02;
+  padding: 0.5em;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  font-weight: 600;
+  color: #fff;
+  transition: ease-in-out 0.3s;
+}
