@@ -45,13 +45,23 @@ export default function Dashboard() {
   const [sortOrder, setSortOrder] = useState("desc");
   const [showSolutionModal, setShowSolutionModal] = useState(false);
   const [selectedTicketId, setSelectedTicketId] = useState(null);
-  const isAdmin = user ? user.isAdmin : false; // Reference isAdmin here
+  const isAdmin = user ? user.isAdmin : false;
+  const [statusOptions, setStatusOptions] = useState([]);
+  const [prioridadeOptions, setPrioridadeOptions] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilters, setStatusFilters] = useState({});
+  const [prioridadeFilters, setPrioridadeFilters] = useState({});
+  const [initialChamados, setInitialChamados] = useState([]);
+  const [tempStatusFilters, setTempStatusFilters] = useState({});
+  const [tempPrioridadeFilters, setTempPrioridadeFilters] = useState({});
 
   useEffect(() => {
     async function loadChamados() {
       const q = query(listRef, orderBy("created", "desc"), limit(5));
       const querySnapshot = await getDocs(q);
       let lista = [];
+      let statusSet = new Set();
+      let prioridadeSet = new Set();
 
       querySnapshot.forEach((doc) => {
         lista.push({
@@ -69,13 +79,42 @@ export default function Dashboard() {
           horaSolucao: doc.data().horaSolucao,
           tecnicoAtb: doc.data().tecnicoAtb,
         });
+
+        statusSet.add(doc.data().status);
+        prioridadeSet.add(doc.data().prioridade);
       });
 
+      // inicializar filtros
+      const initialStatusFilters = Array.from(statusSet).reduce(
+        (acc, status) => {
+          acc[status] = true;
+          return acc;
+        },
+        {}
+      );
+
+      const initialPrioridadeFilters = Array.from(prioridadeSet).reduce(
+        (acc, prioridade) => {
+          acc[prioridade] = true;
+          return acc;
+        },
+        {}
+      );
+
+      setStatusFilters(initialStatusFilters);
+      setPrioridadeFilters(initialPrioridadeFilters);
+      setTempStatusFilters(initialStatusFilters);
+      setTempPrioridadeFilters(initialPrioridadeFilters);
+
+      // primeira renderização da lista
       lista = lista.filter((chamado) => chamado.status !== "Atendido");
 
       setChamados(sortTickets(lista));
+      setInitialChamados(sortTickets(lista));
       setLastDocs(querySnapshot.docs[querySnapshot.docs.length - 1]);
       setLoading(false);
+      setStatusOptions(Array.from(statusSet));
+      setPrioridadeOptions(Array.from(prioridadeSet));
 
       if (lista.length === 0) {
         setIsEmpty(true);
@@ -85,6 +124,9 @@ export default function Dashboard() {
     loadChamados();
   }, []);
 
+  const toggleFilters = () => {
+    setShowFilters(!showFilters);
+  };
   function sortTickets(tickets) {
     const priorityOrder = {
       Critica: 5,
@@ -127,7 +169,7 @@ export default function Dashboard() {
           tecnicoAtb: doc.data().tecnicoAtb,
         });
       });
-
+      // segunda renderização da lista
       lista = lista.filter((chamado) => chamado.status !== "Atendido");
 
       if (lista.length === 0) {
@@ -142,6 +184,33 @@ export default function Dashboard() {
 
     setLoadingMore(false);
   }
+  const handleTempStatusChange = (status) => {
+    setTempStatusFilters((prevFilters) => ({
+      ...prevFilters,
+      [status]: !prevFilters[status],
+    }));
+  };
+
+  const handleTempPrioridadeChange = (prioridade) => {
+    setTempPrioridadeFilters((prevFilters) => ({
+      ...prevFilters,
+      [prioridade]: !prevFilters[prioridade],
+    }));
+  };
+
+  const applyFilters = () => {
+    setStatusFilters(tempStatusFilters);
+    setPrioridadeFilters(tempPrioridadeFilters);
+    filterChamados(tempStatusFilters, tempPrioridadeFilters);
+  };
+
+  const filterChamados = (statusFilters, prioridadeFilters) => {
+    const filteredChamados = initialChamados.filter(
+      (chamado) =>
+        statusFilters[chamado.status] && prioridadeFilters[chamado.prioridade]
+    );
+    setChamados(filteredChamados);
+  };
 
   const handleOpenSolutionModal = (ticketId) => {
     setSelectedTicketId(ticketId);
@@ -286,13 +355,44 @@ export default function Dashboard() {
                 <FiPlus color="#fff" size={25} />
                 Novo chamado
               </Link>
+              <button onClick={toggleFilters}>Filtros</button>
+              {showFilters && (
+                <div className="filter">
+                  {statusOptions.map((status, index) => (
+                    <div key={index}>
+                      <input
+                        type="checkbox"
+                        id={`status-${index}`}
+                        checked={tempStatusFilters[status]}
+                        onChange={() => handleTempStatusChange(status)}
+                      />
+                      <label htmlFor={`status-${index}`}>
+                        Status: {status}
+                      </label>
+                    </div>
+                  ))}
+                  {prioridadeOptions.map((prioridade, index) => (
+                    <div key={index}>
+                      <input
+                        type="checkbox"
+                        id={`prioridade-${index}`}
+                        checked={tempPrioridadeFilters[prioridade]}
+                        onChange={() => handleTempPrioridadeChange(prioridade)}
+                      />
+                      <label htmlFor={`prioridade-${index}`}>
+                        Prioridade: {prioridade}
+                      </label>
+                    </div>
+                  ))}
 
+                  <button onClick={applyFilters}>OK</button>
+                </div>
+              )}
               <table>
                 <thead>
                   <tr>
                     <th scope="col">Cliente</th>
                     <th scope="col">Assunto</th>
-
                     <th scope="col" onClick={() => handleSort("status")}>
                       Status{" "}
                       {sortBy === "status" && (sortOrder === "asc" ? "▲" : "▼")}
@@ -318,12 +418,11 @@ export default function Dashboard() {
                         user.isAdmin ||
                         item.tecnicoAtb === userName ||
                         item.tecnicoAtb === "Não atribuído"
-                    ) // Filter based on admin, assigned technician, or unassigned
+                    )
                     .map((item, index) => (
                       <tr key={index}>
                         <td data-label="Cliente">{item.cliente}</td>
                         <td data-label="Assunto">{item.assunto}</td>
-
                         <td data-label="Status">
                           <span
                             className="badge"
@@ -358,7 +457,6 @@ export default function Dashboard() {
                             {item.prioridade}
                           </span>
                         </td>
-
                         <td data-label="Cadastrado">{item.createdFormat}</td>
                         <td data-label="Cadastrado">
                           {item.tecnicoAtb ? item.tecnicoAtb : "Não atribuído"}

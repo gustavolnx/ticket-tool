@@ -134,3 +134,20 @@ table td .badge {
     text-transform: uppercase;
   }
 }
+
+.filter {
+  text-align: first;
+  /* justify-content: space-between; */
+  width: 500px;
+  height: 80px;
+  /* border: 1px solid red; */
+  padding-bottom: 13rem;
+}
+
+.filter input {
+  margin: 0px 0px 0px 0px;
+}
+
+.filter label {
+  margin: 0px 40px 0px 3px;
+}
