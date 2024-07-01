@@ -151,3 +151,16 @@ table td .badge {
 .filter label {
   margin: 0px 40px 0px 3px;
 }
+
+.btn-filtros {
+  background-color: #83bf02;
+  padding: 0.5em;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  font-weight: 600;
+  color: #fff;
+  transition: ease-in-out 0.3s;
+}

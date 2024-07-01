@@ -124,14 +124,6 @@ export default function Customers() {
           )}
         </div>
       </div>
-      <div className="container">
-        <button
-          onClick={() => setShowForm(false)}
-          className="btn-cadastrarCliente"
-        >
-          Fechar cadastro
-        </button>
-      </div>
     </div>
   );
 }

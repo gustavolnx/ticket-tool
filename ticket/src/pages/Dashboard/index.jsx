@@ -355,7 +355,9 @@ export default function Dashboard() {
                 <FiPlus color="#fff" size={25} />
                 Novo chamado
               </Link>
-              <button onClick={toggleFilters}>Filtros</button>
+              <button onClick={toggleFilters} className="btn-filtros">
+                Filtros
+              </button>
               {showFilters && (
                 <div className="filter">
                   {statusOptions.map((status, index) => (
@@ -385,7 +387,9 @@ export default function Dashboard() {
                     </div>
                   ))}
 
-                  <button onClick={applyFilters}>OK</button>
+                  <button onClick={applyFilters} className="btn-filtros">
+                    OK
+                  </button>
                 </div>
               )}
               <table>
