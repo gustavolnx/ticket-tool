@@ -57,7 +57,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function loadChamados() {
-      const q = query(listRef, orderBy("created", "desc"), limit(5));
+      const q = query(listRef, orderBy("created", "desc"), limit(10));
       const querySnapshot = await getDocs(q);
       let lista = [];
       let statusSet = new Set();
@@ -234,7 +234,7 @@ export default function Dashboard() {
       listRef,
       orderBy("created", "desc"),
       startAfter(lastDocs),
-      limit(5)
+      limit(10)
     );
     const querySnapshot = await getDocs(q);
     await updateState(querySnapshot);
@@ -395,7 +395,7 @@ export default function Dashboard() {
               <table>
                 <thead>
                   <tr>
-                    <th scope="col">Cliente</th>
+                    <th scope="col">PONTO</th>
                     <th scope="col">Assunto</th>
                     <th scope="col" onClick={() => handleSort("status")}>
                       Status{" "}
@@ -425,7 +425,7 @@ export default function Dashboard() {
                     )
                     .map((item, index) => (
                       <tr key={index}>
-                        <td data-label="Cliente">{item.cliente}</td>
+                        <td data-label="Ponto">{item.cliente}</td>
                         <td data-label="Assunto">{item.assunto}</td>
                         <td data-label="Status">
                           <span
