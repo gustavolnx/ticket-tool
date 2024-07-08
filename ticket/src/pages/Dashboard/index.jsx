@@ -54,6 +54,8 @@ export default function Dashboard() {
   const [initialChamados, setInitialChamados] = useState([]);
   const [tempStatusFilters, setTempStatusFilters] = useState({});
   const [tempPrioridadeFilters, setTempPrioridadeFilters] = useState({});
+  const [searchTecnico, setSearchTecnico] = useState("");
+  const [searchPonto, setSearchPonto] = useState("");
 
   useEffect(() => {
     async function loadChamados() {
@@ -201,13 +203,22 @@ export default function Dashboard() {
   const applyFilters = () => {
     setStatusFilters(tempStatusFilters);
     setPrioridadeFilters(tempPrioridadeFilters);
-    filterChamados(tempStatusFilters, tempPrioridadeFilters);
+    filterChamados(
+      tempStatusFilters,
+      tempPrioridadeFilters,
+      searchTecnico,
+      searchPonto
+    );
   };
 
-  const filterChamados = (statusFilters, prioridadeFilters) => {
+  const filterChamados = (statusFilters, prioridadeFilters, tecnico, ponto) => {
     const filteredChamados = initialChamados.filter(
       (chamado) =>
-        statusFilters[chamado.status] && prioridadeFilters[chamado.prioridade]
+        statusFilters[chamado.status] &&
+        prioridadeFilters[chamado.prioridade] &&
+        (!tecnico ||
+          chamado.tecnicoAtb.toLowerCase().includes(tecnico.toLowerCase())) &&
+        (!ponto || chamado.cliente.toLowerCase().includes(ponto.toLowerCase()))
     );
     setChamados(filteredChamados);
   };
@@ -386,6 +397,20 @@ export default function Dashboard() {
                       </label>
                     </div>
                   ))}
+                  <div className="searchTecPonto">
+                    <input
+                      type="text"
+                      placeholder="Pesquisar um técnico"
+                      value={searchTecnico}
+                      onChange={(e) => setSearchTecnico(e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Pesquisar um ponto"
+                      value={searchPonto}
+                      onChange={(e) => setSearchPonto(e.target.value)}
+                    />
+                  </div>
 
                   <button onClick={applyFilters} className="btn-filtros">
                     OK

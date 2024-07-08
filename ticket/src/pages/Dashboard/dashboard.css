@@ -17,6 +17,11 @@
   margin-right: 5px;
 }
 
+.searchTecPonto {
+  display: flex;
+  flex-direction: column;
+}
+
 .new:hover {
   background-color: #5fd204;
   transform: scale(1.1);
@@ -141,7 +146,7 @@ table td .badge {
   width: 500px;
   height: 80px;
   /* border: 1px solid red; */
-  padding-bottom: 13rem;
+  padding-bottom: 16rem;
 }
 
 .filter input {
