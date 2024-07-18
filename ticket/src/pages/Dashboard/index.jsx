@@ -354,11 +354,62 @@ export default function Dashboard() {
               item.tecnicoAtb === "Não atribuído"
           ).length === 0 ? (
             <div className="container dashboard">
-              <span>Nenhum chamado registrado...</span>
+              <span>Nenhum chamado encontrado...</span>
               <Link to="/new" className="new">
                 <FiPlus color="#fff" size={25} />
                 Novo chamado
               </Link>
+              <button onClick={toggleFilters} className="btn-filtros">
+                Filtros
+              </button>
+              {showFilters && (
+                <div className="filter">
+                  {statusOptions.map((status, index) => (
+                    <div key={index}>
+                      <input
+                        type="checkbox"
+                        id={`status-${index}`}
+                        checked={tempStatusFilters[status]}
+                        onChange={() => handleTempStatusChange(status)}
+                      />
+                      <label htmlFor={`status-${index}`}>
+                        Status: {status}
+                      </label>
+                    </div>
+                  ))}
+                  {prioridadeOptions.map((prioridade, index) => (
+                    <div key={index}>
+                      <input
+                        type="checkbox"
+                        id={`prioridade-${index}`}
+                        checked={tempPrioridadeFilters[prioridade]}
+                        onChange={() => handleTempPrioridadeChange(prioridade)}
+                      />
+                      <label htmlFor={`prioridade-${index}`}>
+                        Prioridade: {prioridade}
+                      </label>
+                    </div>
+                  ))}
+                  <div className="searchTecPonto">
+                    <input
+                      type="text"
+                      placeholder="Pesquisar um técnico"
+                      value={searchTecnico}
+                      onChange={(e) => setSearchTecnico(e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Pesquisar um ponto"
+                      value={searchPonto}
+                      onChange={(e) => setSearchPonto(e.target.value)}
+                    />
+                  </div>
+
+                  <button onClick={applyFilters} className="btn-filtros">
+                    OK
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <>

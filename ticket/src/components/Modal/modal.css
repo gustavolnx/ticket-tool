@@ -20,6 +20,14 @@
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.8);
 }
 
+.chamado-image {
+  max-width: 50%;
+  height: auto;
+  margin-top: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
 .close {
   background-color: #f65835;
   border: 0;

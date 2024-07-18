@@ -1,6 +1,9 @@
 import "./modal.css";
 import { FiX } from "react-icons/fi";
+
 export default function Modal({ conteudo, close }) {
+  console.log("Conteúdo do modal:", conteudo); // Log para verificar o conteúdo
+
   return (
     <div className="modal">
       <div className="container">
@@ -31,7 +34,7 @@ export default function Modal({ conteudo, close }) {
               <i
                 className="status-badge"
                 style={{
-                  color: "fff",
+                  color: "#fff",
                   backgroundColor:
                     conteudo.status === "Aberto"
                       ? "rgb(53, 131, 246)"
@@ -77,6 +80,17 @@ export default function Modal({ conteudo, close }) {
               <p>{conteudo.complemento}</p>
             </>
           )}
+
+          <div className="row">
+            <h3>Imagem</h3>
+            <img
+              src={
+                "https://firebasestorage.googleapis.com/v0/b/gestaocombo-93bb4.appspot.com/o/images%2Fdesign-a-creative-innovative-and-modern-logo-for-a-H75BbSE1RJKODujjCD1mYg-K1y2n2dSTget3_zeLOVKCg.jpeg?alt=media&token=36bc7f25-828e-4048-9e47-cf1af661a308"
+              }
+              alt="Imagem do chamado"
+              className="chamado-image"
+            />
+          </div>
 
           <div className="row solution">
             <span>

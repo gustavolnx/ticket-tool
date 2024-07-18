@@ -3,7 +3,7 @@ import Title from "../../components/Title";
 import { FiPlusCircle } from "react-icons/fi";
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../../contexts/auth";
-import { db } from "../../services/firebaseConnection";
+import { db, storage } from "../../services/firebaseConnection";
 import {
   collection,
   getDocs,
@@ -15,6 +15,8 @@ import {
 import { toast } from "react-toastify";
 import { useParams, useNavigate } from "react-router-dom";
 
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
 import "./new.css";
 
 const listRef = collection(db, "customers");
@@ -25,6 +27,7 @@ export default function New() {
   const { user } = useContext(AuthContext);
 
   const { id } = useParams();
+  const [file, setFile] = useState(null);
 
   const [customers, setCustomers] = useState([]);
   const [loadCustomer, setLoadCustomer] = useState(true);
@@ -136,6 +139,11 @@ export default function New() {
     setTecnicoAtb(e.target.value);
     console.log(e.target.value);
   }
+  function handleFileChange(e) {
+    if (e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  }
 
   function handleChangeSelect(e) {
     setAssunto(e.target.value);
@@ -152,20 +160,32 @@ export default function New() {
   async function handleRegister(e) {
     e.preventDefault();
 
+    let imageUrl = "";
+
+    if (file) {
+      const storageRef = ref(storage, `images/${file.name}`);
+      const uploadTask = await uploadBytes(storageRef, file);
+      imageUrl = await getDownloadURL(uploadTask.ref);
+    }
+
+    const chamadoData = {
+      cliente: customers[customerSelected].pontoLocal,
+      clienteId: customers[customerSelected].id,
+      assunto: assunto,
+      status: status,
+      prioridade: prioridade,
+      complemento: complemento,
+      solucaoChamado: solucaoChamado,
+      userId: user.uid,
+      tecnicoAtb: tecnicoAtb,
+      imageUrl: imageUrl, // Adiciona a URL da imagem
+      created: new Date(),
+    };
+
     if (idCustomer) {
-      //   atualizando chamado
+      // Atualizando chamado
       const docRef = doc(db, "chamados", id);
-      await updateDoc(docRef, {
-        cliente: customers[customerSelected].pontoLocal,
-        clienteId: customers[customerSelected].id,
-        assunto: assunto,
-        status: status,
-        prioridade: prioridade,
-        complemento: complemento,
-        solucaoChamado: solucaoChamado,
-        userId: user.uid,
-        tecnicoAtb: tecnicoAtb,
-      })
+      await updateDoc(docRef, chamadoData)
         .then(() => {
           toast.info("Chamado editado com sucesso!");
           setComplemento("");
@@ -176,34 +196,19 @@ export default function New() {
           toast.error("Erro ao editar chamado, tente novamente!");
           console.log(error);
         });
-
-      return;
+    } else {
+      // Registrando chamado
+      await addDoc(collection(db, "chamados"), chamadoData)
+        .then(() => {
+          toast.success("Chamado registrado com sucesso!");
+          setComplemento("");
+          setCustomerSelected(0);
+        })
+        .catch((error) => {
+          toast.error("Erro ao registrar chamado, tente novamente!");
+          console.log(error);
+        });
     }
-
-    // regist chamado
-
-    await addDoc(collection(db, "chamados"), {
-      created: new Date(),
-      cliente: customers[customerSelected].pontoLocal,
-      clienteId: customers[customerSelected].id,
-      assunto: assunto,
-      status: status,
-      prioridade: prioridade,
-      complemento: complemento,
-      solucaoChamado: solucaoChamado,
-      userId: user.uid,
-      tecnicoAtb: tecnicoAtb,
-    })
-      .then(() => {
-        toast.success("Chamado registrado com sucesso!");
-        setComplemento("");
-        setCustomerSelected(0);
-      })
-
-      .catch((error) => {
-        toast.error("Erro ao registrar chamado, tente novamente!");
-        console.log(error);
-      });
   }
 
   return (
@@ -230,7 +235,6 @@ export default function New() {
                 })}
               </select>
             )}
-
             <label>Assunto</label>
             <select value={assunto} onChange={handleChangeSelect}>
               <option value="Acesso remoto">Acesso remoto</option>
@@ -238,7 +242,6 @@ export default function New() {
               <option value="Troca de aparelho">Troca de aparelho</option>
             </select>
             <label>Status</label>
-
             <select
               name="status"
               value={status}
@@ -249,7 +252,6 @@ export default function New() {
               <option value="Progresso">Em progresso</option>
               <option value="Atendido">Atendido</option>
             </select>
-
             <label>Prioridade</label>
             <select value={prioridade} onChange={handleChangePrioridadeSelect}>
               <option value="Baixa">Baixa</option>
@@ -258,7 +260,6 @@ export default function New() {
               <option value="Urgente">Urgente</option>
               <option value="Critica">Critica</option>
             </select>
-
             <label>Técnico</label>
             <select value={tecnicoAtb} onChange={handleChangeTecnicoSelect}>
               {loadingTecnicosCadastrados ? (
@@ -274,7 +275,6 @@ export default function New() {
                 </>
               )}
             </select>
-
             <label>Descrição do problema</label>
             <textarea
               type="text"
@@ -282,6 +282,7 @@ export default function New() {
               value={complemento}
               onChange={(e) => setComplemento(e.target.value)}
             />
+            <input type="file" onChange={handleFileChange} />
 
             {/* <label>Solução</label>
             <select value={solucaoChamado} onChange={handleChangeSolucaoSelect}>
@@ -292,7 +293,6 @@ export default function New() {
               </option>
               <option value="Outros">Outros</option>
             </select> */}
-
             <button type="submit">Registrar</button>
           </form>
         </div>
