@@ -1,9 +1,17 @@
+import { useState } from "react";
 import "./modal.css";
 import { FiX } from "react-icons/fi";
 
 export default function Modal({ conteudo, close }) {
-  console.log("Conteúdo do modal:", conteudo); // Log para verificar o conteúdo
-  console.log("URL da imagem:", conteudo.imagemSolucao); // Log para verificar a URL da imagem
+  const [expandedImage, setExpandedImage] = useState(null);
+
+  const handleImageClick = (url) => {
+    setExpandedImage(url);
+  };
+
+  const closeExpandedImage = () => {
+    setExpandedImage(null);
+  };
 
   return (
     <div className="modal">
@@ -90,13 +98,38 @@ export default function Modal({ conteudo, close }) {
           )}
 
           <div className="row">
-            <h3>Imagem</h3>
+            <h3>Imagens de abertura</h3>
+            {conteudo.imageUrls.length > 0 ? (
+              conteudo.imageUrls.map((url, index) => (
+                <img
+                  key={index}
+                  src={url}
+                  alt={`Imagem de abertura ${index + 1}`}
+                  className="round-image"
+                  onClick={() => handleImageClick(url)}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://via.placeholder.com/100";
+                  }}
+                />
+              ))
+            ) : (
+              <p>Sem imagem</p>
+            )}
+          </div>
+
+          <div className="row">
+            <h3>Imagem de solução</h3>
             {conteudo.imagemSolucao ? (
               <img
                 src={conteudo.imagemSolucao}
                 alt="Imagem da solução"
-                width="100"
-                height="100"
+                className="round-image"
+                onClick={() => handleImageClick(conteudo.imagemSolucao)}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "https://via.placeholder.com/100";
+                }}
               />
             ) : (
               <p>Sem imagem</p>
@@ -120,6 +153,18 @@ export default function Modal({ conteudo, close }) {
           )}
         </main>
       </div>
+
+      {expandedImage && (
+        <div className="expanded-image-modal" onClick={closeExpandedImage}>
+          <div className="expanded-image-container">
+            <img src={expandedImage} alt="Imagem expandida" />
+            <button className="close-expanded" onClick={closeExpandedImage}>
+              <FiX size={25} color="#fff" />
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -80,7 +80,9 @@ export default function Dashboard() {
           dataSolucao: doc.data().dataSolucao,
           horaSolucao: doc.data().horaSolucao,
           tecnicoAtb: doc.data().tecnicoAtb,
-          imagemSolucao: doc.data.imagemSolucao,
+          imageUrls: doc.data().imageUrls || [], // Adicionar campo imageUrls
+          imagemSolucao: doc.data().imagemSolucao,
+          equipamento: doc.data().equipamento,
         });
 
         statusSet.add(doc.data().status);
@@ -130,6 +132,7 @@ export default function Dashboard() {
   const toggleFilters = () => {
     setShowFilters(!showFilters);
   };
+
   function sortTickets(tickets) {
     const priorityOrder = {
       Critica: 5,
@@ -170,9 +173,11 @@ export default function Dashboard() {
           dataSolucao: doc.data().dataSolucao,
           horaSolucao: doc.data().horaSolucao,
           tecnicoAtb: doc.data().tecnicoAtb,
-          imagemSolucao: doc.data.imagemSolucao,
+          imageUrls: doc.data().imageUrls || [], // Adicionar campo imageUrls
+          imagemSolucao: doc.data().imagemSolucao,
         });
       });
+
       // segunda renderização da lista
       lista = lista.filter((chamado) => chamado.status !== "Atendido");
 
@@ -188,6 +193,7 @@ export default function Dashboard() {
 
     setLoadingMore(false);
   }
+
   const handleTempStatusChange = (status) => {
     setTempStatusFilters((prevFilters) => ({
       ...prevFilters,
@@ -324,6 +330,7 @@ export default function Dashboard() {
       toast.error("Erro ao atribuir o chamado.");
     }
   }
+
   if (loading) {
     return (
       <div>
@@ -497,7 +504,7 @@ export default function Dashboard() {
                   {chamados
                     .filter(
                       (item) =>
-                        user.isAdmin ||
+                        isAdmin ||
                         item.tecnicoAtb === userName ||
                         item.tecnicoAtb === "Não atribuído"
                     )

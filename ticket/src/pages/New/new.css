@@ -1,21 +1,51 @@
 form textarea {
-    resize: none;
-    height: 105px;
+  resize: none;
+  height: 105px;
 }
 
-.radio{
-    margin : 15px 0!important;
+.radio {
+  margin: 15px 0 !important;
 }
 
-.radio:not(:first-child){
-    margin-left : 15px!important;
+.radio:not(:first-child) {
+  margin-left: 15px !important;
 }
 
 .status span {
-    padding-left: 0.5em;
-    font-size: 1.3em;
+  padding-left: 0.5em;
+  font-size: 1.3em;
 }
 
-.status{
-    margin-bottom: 1em;
+.status {
+  margin-bottom: 1em;
+}
+.image-preview-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.image-preview {
+  position: relative;
+  display: inline-block;
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
+.remove-image-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: red;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px; /* Tamanho do X */
+  padding: 0;
+  line-height: 1;
 }

@@ -17,7 +17,12 @@ import {
 import { toast } from "react-toastify";
 import { useParams, useNavigate } from "react-router-dom";
 
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
 
 import "./new.css";
 
@@ -27,7 +32,7 @@ export default function New() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const { id } = useParams();
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]); // Alterado para suportar múltiplos arquivos
 
   const [customers, setCustomers] = useState([]);
   const [loadCustomer, setLoadCustomer] = useState(true);
@@ -46,6 +51,7 @@ export default function New() {
   const [equipamentos, setEquipamentos] = useState([]);
   const [equipamentoSelecionado, setEquipamentoSelecionado] =
     useState("Não informado");
+  const [imageUrls, setImageUrls] = useState([]); // Adicionar estado para as URLs das imagens existentes
 
   useEffect(() => {
     async function loadTecnicosCadastrados() {
@@ -135,6 +141,7 @@ export default function New() {
         setComplemento(snapshot.data().complemento);
         setSolucaoChamado(snapshot.data().solucaoChamado);
         setTecnicoAtb(snapshot.data().tecnicoAtb);
+        setImageUrls(snapshot.data().imageUrls || []); // Carregar as URLs das imagens existentes
 
         let index = lista.findIndex(
           (item) => item.id === snapshot.data().clienteId
@@ -168,8 +175,9 @@ export default function New() {
   }
 
   function handleFileChange(e) {
-    if (e.target.files[0]) {
-      setFile(e.target.files[0]);
+    if (e.target.files.length > 0) {
+      const selectedFiles = Array.from(e.target.files);
+      setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
     }
   }
 
@@ -190,15 +198,27 @@ export default function New() {
     setSolucaoChamado(e.target.value);
   }
 
+  const handleRemoveImage = (index) => {
+    setImageUrls((prevImageUrls) =>
+      prevImageUrls.filter((_, i) => i !== index)
+    );
+  };
+
   async function handleRegister(e) {
     e.preventDefault();
 
-    let imageUrl = "";
+    let newImageUrls = [...imageUrls]; // Manter as URLs das imagens existentes
 
-    if (file) {
-      const storageRef = ref(storage, `images/${file.name}`);
-      const uploadTask = await uploadBytes(storageRef, file);
-      imageUrl = await getDownloadURL(uploadTask.ref);
+    if (files.length > 0) {
+      const uploadPromises = files.map((file) => {
+        const storageRef = ref(storage, `images/${file.name}`);
+        return uploadBytes(storageRef, file).then((snapshot) =>
+          getDownloadURL(snapshot.ref)
+        );
+      });
+
+      const uploadedUrls = await Promise.all(uploadPromises);
+      newImageUrls = [...newImageUrls, ...uploadedUrls];
     }
 
     const equipamentoInfo =
@@ -215,7 +235,7 @@ export default function New() {
       userId: user.uid,
       tecnicoAtb: tecnicoAtb,
       equipamento: equipamentoInfo,
-      imageUrl: imageUrl,
+      imageUrls: newImageUrls,
       created: new Date(),
     };
 
@@ -337,7 +357,29 @@ export default function New() {
               value={complemento}
               onChange={(e) => setComplemento(e.target.value)}
             />
-            <input type="file" onChange={handleFileChange} />
+            <input type="file" onChange={handleFileChange} multiple />
+
+            {imageUrls.length > 0 && (
+              <div className="image-preview-container">
+                {imageUrls.map((url, index) => (
+                  <div key={index} className="image-preview">
+                    <img
+                      src={url}
+                      alt={`Imagem ${index + 1}`}
+                      width="100"
+                      height="100"
+                    />
+                    <button
+                      type="button"
+                      className="remove-image-button"
+                      onClick={() => handleRemoveImage(index)}
+                    >
+                      X
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <button type="submit">Registrar</button>
           </form>

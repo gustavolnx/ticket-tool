@@ -63,6 +63,8 @@ export default function Atendidos() {
           dataSolucao: doc.data().dataSolucao,
           horaSolucao: doc.data().horaSolucao,
           tecnicoAtb: doc.data().tecnicoAtb,
+          imagemSolucao: doc.data().imagemSolucao, // Adicionar este campo
+          imageUrls: doc.data().imageUrls || [], // Adicionar este campo
         });
       });
 
@@ -115,6 +117,8 @@ export default function Atendidos() {
           dataSolucao: doc.data().dataSolucao,
           horaSolucao: doc.data().horaSolucao,
           tecnicoAtb: doc.data().tecnicoAtb,
+          imagemSolucao: doc.data().imagemSolucao, // Adicionar este campo
+          imageUrls: doc.data().imageUrls || [], // Adicionar este campo
         });
       });
 
