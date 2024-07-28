@@ -11,6 +11,8 @@ import {
   doc,
   addDoc,
   updateDoc,
+  query,
+  where,
 } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { useParams, useNavigate } from "react-router-dom";
@@ -23,9 +25,7 @@ const listRef = collection(db, "customers");
 
 export default function New() {
   const navigate = useNavigate();
-
   const { user } = useContext(AuthContext);
-
   const { id } = useParams();
   const [file, setFile] = useState(null);
 
@@ -40,9 +40,12 @@ export default function New() {
   const [idCustomer, setIdCustomer] = useState(false);
   const [solucaoChamado, setSolucaoChamado] = useState("Não solucionado");
   const [tecnicoAtb, setTecnicoAtb] = useState("Não atribuído");
-  const [TecnicosCadastrados, setTecnicosCadastrados] = useState([]); // State for TecnicosCadastrados
+  const [TecnicosCadastrados, setTecnicosCadastrados] = useState([]);
   const [loadingTecnicosCadastrados, setLoadingTecnicosCadastrados] =
-    useState(true); // Loading state
+    useState(true);
+  const [equipamentos, setEquipamentos] = useState([]);
+  const [equipamentoSelecionado, setEquipamentoSelecionado] =
+    useState("Não informado");
 
   useEffect(() => {
     async function loadTecnicosCadastrados() {
@@ -50,15 +53,15 @@ export default function New() {
         const usersCollection = collection(db, "users");
         const querySnapshot = await getDocs(usersCollection);
         const TecnicosCadastradosData = querySnapshot.docs
-          .map((doc) => ({ id: doc.id, nome: doc.data().nome })) // Extract id and name
-          .filter((user) => user.nome !== ""); // Filter out empty names
+          .map((doc) => ({ id: doc.id, nome: doc.data().nome }))
+          .filter((user) => user.nome !== "");
 
         setTecnicosCadastrados(TecnicosCadastradosData);
       } catch (error) {
         console.error("Erro ao carregar técnicos:", error);
-        toast.error("Erro ao carregar técnicos."); // Display an error toast
+        toast.error("Erro ao carregar técnicos.");
       } finally {
-        setLoadingTecnicosCadastrados(false); // Always set loading to false, even on error
+        setLoadingTecnicosCadastrados(false);
       }
     }
 
@@ -91,7 +94,6 @@ export default function New() {
             loadId(lista);
           }
         })
-
         .catch((error) => {
           console.log("Deu erro", error);
           setLoadCustomer(false);
@@ -100,6 +102,28 @@ export default function New() {
     }
     loadCustomers();
   }, [id]);
+
+  useEffect(() => {
+    if (customers.length > 0) {
+      loadEquipamentos();
+    }
+  }, [customerSelected, customers]);
+
+  async function loadEquipamentos() {
+    if (customers[customerSelected]) {
+      const q = query(
+        collection(db, "equipamentos"),
+        where("clienteId", "==", customers[customerSelected].id)
+      );
+      const querySnapshot = await getDocs(q);
+      const equipamentosData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        categoria: doc.data().categoria,
+        patrimonio: doc.data().patrimonio,
+      }));
+      setEquipamentos(equipamentosData);
+    }
+  }
 
   async function loadId(lista) {
     const docRef = doc(db, "chamados", id);
@@ -116,9 +140,12 @@ export default function New() {
           (item) => item.id === snapshot.data().clienteId
         );
         setCustomerSelected(index);
+        setEquipamentoSelecionado(
+          snapshot.data().equipamento || "Não informado"
+        );
         setIdCustomer(true);
+        loadEquipamentos(); // Load equipamentos when editing a chamado
       })
-
       .catch((error) => {
         console.log("Deu erro", error);
         setIdCustomer(false);
@@ -139,6 +166,7 @@ export default function New() {
     setTecnicoAtb(e.target.value);
     console.log(e.target.value);
   }
+
   function handleFileChange(e) {
     if (e.target.files[0]) {
       setFile(e.target.files[0]);
@@ -151,6 +179,11 @@ export default function New() {
 
   function handleChangeCustomer(e) {
     setCustomerSelected(e.target.value);
+    loadEquipamentos(); // Load equipamentos when changing customer
+  }
+
+  function handleChangeEquipamentoSelect(e) {
+    setEquipamentoSelecionado(e.target.value);
   }
 
   function handleChangeSolucaoSelect(e) {
@@ -168,6 +201,9 @@ export default function New() {
       imageUrl = await getDownloadURL(uploadTask.ref);
     }
 
+    const equipamentoInfo =
+      equipamentoSelecionado === "Não informado" ? "" : equipamentoSelecionado;
+
     const chamadoData = {
       cliente: customers[customerSelected].pontoLocal,
       clienteId: customers[customerSelected].id,
@@ -178,7 +214,8 @@ export default function New() {
       solucaoChamado: solucaoChamado,
       userId: user.uid,
       tecnicoAtb: tecnicoAtb,
-      imageUrl: imageUrl, // Adiciona a URL da imagem
+      equipamento: equipamentoInfo,
+      imageUrl: imageUrl,
       created: new Date(),
     };
 
@@ -238,8 +275,25 @@ export default function New() {
             <label>Assunto</label>
             <select value={assunto} onChange={handleChangeSelect}>
               <option value="Acesso remoto">Acesso remoto</option>
-              <option value="Visita Tecnica">Visita tecnica</option>
+              <option value="Visita Tecnica">Visita técnica</option>
               <option value="Troca de aparelho">Troca de aparelho</option>
+            </select>
+            <label>Equipamento</label>
+            <select
+              value={equipamentoSelecionado}
+              onChange={handleChangeEquipamentoSelect}
+            >
+              <option value="Não informado">Não informado</option>
+              {equipamentos.length > 0 ? (
+                equipamentos.map((equipamento) => (
+                  <option
+                    key={equipamento.id}
+                    value={`${equipamento.categoria} - ${equipamento.patrimonio}`}
+                  >{`${equipamento.categoria} - ${equipamento.patrimonio}`}</option>
+                ))
+              ) : (
+                <option value="">Nenhum equipamento encontrado</option>
+              )}
             </select>
             <label>Status</label>
             <select
@@ -248,7 +302,7 @@ export default function New() {
               onChange={handleOptionChange}
               className="select-status"
             >
-              <option value="Aberto">Em aberto</option>
+              <option value="Aberto">Aberto</option>
               <option value="Progresso">Em progresso</option>
               <option value="Atendido">Atendido</option>
             </select>
@@ -258,7 +312,7 @@ export default function New() {
               <option value="Média">Média</option>
               <option value="Alta">Alta</option>
               <option value="Urgente">Urgente</option>
-              <option value="Critica">Critica</option>
+              <option value="Critica">Crítica</option>
             </select>
             <label>Técnico</label>
             <select value={tecnicoAtb} onChange={handleChangeTecnicoSelect}>
@@ -275,6 +329,7 @@ export default function New() {
                 </>
               )}
             </select>
+
             <label>Descrição do problema</label>
             <textarea
               type="text"
@@ -284,15 +339,6 @@ export default function New() {
             />
             <input type="file" onChange={handleFileChange} />
 
-            {/* <label>Solução</label>
-            <select value={solucaoChamado} onChange={handleChangeSolucaoSelect}>
-              <option value="Não solucionado">Não solucionado</option>
-              <option value="Troca do aparelho">Troca do aparelho</option>
-              <option value="Reiniciar aparelho">
-                Reiniciar rede/aparelho
-              </option>
-              <option value="Outros">Outros</option>
-            </select> */}
             <button type="submit">Registrar</button>
           </form>
         </div>

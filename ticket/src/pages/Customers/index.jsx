@@ -14,6 +14,10 @@ export default function Customers() {
   const [showForm, setShowForm] = useState(false); // Estado para controlar a visibilidade do formulário
   const [clientes, setClientes] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showFormProd, setShowFormProd] = useState(false);
+  const [categoriaEquip, setCategoriaEquip] = useState(false);
+  const [checkPc, setCheckPc] = useState(false);
+  const [checkCompartilhado, setCheckCompartilhado] = useState(false);
 
   useEffect(() => {
     async function fetchClientes() {
@@ -27,7 +31,7 @@ export default function Customers() {
     fetchClientes();
   }, []);
 
-  async function handleRegister(e) {
+  async function handleRegisterCliente(e) {
     e.preventDefault();
 
     if (ponto !== "" && endereco !== "" && nomeFantasia !== "") {
@@ -41,6 +45,65 @@ export default function Customers() {
           setEndereco("");
           setNomeFantasia("");
           toast.success("Cliente cadastrado com sucesso!");
+          // Atualizar a lista de clientes após cadastrar um novo cliente
+          fetchClientes();
+        })
+        .catch((error) => {
+          console.log(error);
+          toast.error("Erro ao cadastrar cliente");
+        });
+    } else {
+      toast.error("Preencha todos os campos");
+    }
+  }
+
+  async function handleRegisterEquip(e) {
+    e.preventDefault();
+
+    if (ponto !== "" && categoriaEquip !== "") {
+      await addDoc(collection(db, "equipments"), {
+        pontoLocal: ponto,
+        categoriaEquip: categoriaEquip,
+        checkCompartilhado:
+          categoriaEquip === "PC" ? checkCompartilhado : false,
+      })
+        .then(() => {
+          setPonto("");
+          setCategoriaEquip("");
+          setCheckCompartilhado(false);
+          toast.success("Equipamento cadastrado com sucesso!");
+          // Atualizar a lista de equipamentos após cadastrar um novo equipamento
+          fetchClientes();
+        })
+        .catch((error) => {
+          console.log(error);
+          toast.error("Erro ao cadastrar equipamento");
+        });
+    } else {
+      toast.error("Preencha todos os campos");
+    }
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+
+    if (ponto !== "" && endereco !== "" && nomeFantasia !== "") {
+      await addDoc(collection(db, "customers"), {
+        pontoLocal: ponto,
+        endereco: endereco,
+        nomeFantasia: nomeFantasia,
+        categoriaEquip: categoriaEquip,
+        checkPc: checkPc,
+        checkCompartilhado:
+          categoriaEquip === "PC" ? checkCompartilhado : false,
+      })
+        .then(() => {
+          setPonto("");
+          setEndereco("");
+          setNomeFantasia("");
+          categoriaEquip("");
+          checkCompartilhado(""),
+            toast.success("Cliente cadastrado com sucesso!");
           // Atualizar a lista de clientes após cadastrar um novo cliente
           fetchClientes();
         })

@@ -8,6 +8,7 @@ import Private from "./Private";
 import Costumers from "../pages/Customers";
 import New from "../pages/New";
 import Atendidos from "../pages/Atendidos";
+import Equipamentos from "../pages/Equipamentos";
 
 function RoutesApp() {
   return (
@@ -67,6 +68,14 @@ function RoutesApp() {
         element={
           <Private>
             <Atendidos />
+          </Private>
+        }
+      />
+      <Route
+        path="/equipamentos"
+        element={
+          <Private>
+            <Equipamentos />
           </Private>
         }
       />

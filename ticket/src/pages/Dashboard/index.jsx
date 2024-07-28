@@ -80,6 +80,7 @@ export default function Dashboard() {
           dataSolucao: doc.data().dataSolucao,
           horaSolucao: doc.data().horaSolucao,
           tecnicoAtb: doc.data().tecnicoAtb,
+          imagemSolucao: doc.data.imagemSolucao,
         });
 
         statusSet.add(doc.data().status);
@@ -169,6 +170,7 @@ export default function Dashboard() {
           dataSolucao: doc.data().dataSolucao,
           horaSolucao: doc.data().horaSolucao,
           tecnicoAtb: doc.data().tecnicoAtb,
+          imagemSolucao: doc.data.imagemSolucao,
         });
       });
       // segunda renderização da lista

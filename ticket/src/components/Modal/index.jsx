@@ -3,6 +3,7 @@ import { FiX } from "react-icons/fi";
 
 export default function Modal({ conteudo, close }) {
   console.log("Conteúdo do modal:", conteudo); // Log para verificar o conteúdo
+  console.log("URL da imagem:", conteudo.imagemSolucao); // Log para verificar a URL da imagem
 
   return (
     <div className="modal">
@@ -69,10 +70,17 @@ export default function Modal({ conteudo, close }) {
 
           <div className="row">
             <span>
-              {" "}
               Técnico: <i>{conteudo.tecnicoAtb}</i>
             </span>
           </div>
+
+          {conteudo.equipamento && (
+            <div className="row">
+              <span>
+                Equipamento: <i>{conteudo.equipamento}</i>
+              </span>
+            </div>
+          )}
 
           {conteudo.complemento !== "" && (
             <>
@@ -83,13 +91,16 @@ export default function Modal({ conteudo, close }) {
 
           <div className="row">
             <h3>Imagem</h3>
-            <img
-              src={
-                "https://firebasestorage.googleapis.com/v0/b/gestaocombo-93bb4.appspot.com/o/images%2Fdesign-a-creative-innovative-and-modern-logo-for-a-H75BbSE1RJKODujjCD1mYg-K1y2n2dSTget3_zeLOVKCg.jpeg?alt=media&token=36bc7f25-828e-4048-9e47-cf1af661a308"
-              }
-              alt="Imagem do chamado"
-              className="chamado-image"
-            />
+            {conteudo.imagemSolucao ? (
+              <img
+                src={conteudo.imagemSolucao}
+                alt="Imagem da solução"
+                width="100"
+                height="100"
+              />
+            ) : (
+              <p>Sem imagem</p>
+            )}
           </div>
 
           <div className="row solution">
@@ -97,7 +108,7 @@ export default function Modal({ conteudo, close }) {
               Solução: <i>{conteudo.solucaoChamado}</i>
             </span>
           </div>
-          {conteudo.dataSolucao && ( // Renderiza apenas se dataSolucao existir
+          {conteudo.dataSolucao && (
             <div className="row">
               <span>Data solução: </span>
               <i>
