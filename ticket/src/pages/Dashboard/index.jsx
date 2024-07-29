@@ -4,6 +4,7 @@ import Header from "../../components/Header";
 import "./dashboard.css";
 import Title from "../../components/Title";
 import { toast } from "react-toastify";
+import axios from "axios";
 import {
   FiPlus,
   FiMessageSquare,
@@ -11,9 +12,12 @@ import {
   FiEdit2,
   FiCrosshair,
   FiUserPlus,
-  FiUserCheck,
+  FiMapPin,
+  FiPlay,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { confirmAlert } from "react-confirm-alert";
+import "react-confirm-alert/src/react-confirm-alert.css";
 import {
   collection,
   getDocs,
@@ -23,11 +27,13 @@ import {
   query,
   updateDoc,
   doc,
+  GeoPoint,
 } from "firebase/firestore";
 import { db } from "../../services/firebaseConnection";
-import Modal from "../../components/Modal";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import SolutionModal from "../../components/SolutionModal";
+import Modal from "../../components/Modal";
 
 const listRef = collection(db, "chamados");
 
@@ -80,9 +86,11 @@ export default function Dashboard() {
           dataSolucao: doc.data().dataSolucao,
           horaSolucao: doc.data().horaSolucao,
           tecnicoAtb: doc.data().tecnicoAtb,
-          imageUrls: doc.data().imageUrls || [], // Adicionar campo imageUrls
+          imageUrls: doc.data().imageUrls || [],
           imagemSolucao: doc.data().imagemSolucao,
           equipamento: doc.data().equipamento,
+          playChamado: doc.data().playChamado || null,
+          chegadaLocal: doc.data().chegadaLocal || null,
         });
 
         statusSet.add(doc.data().status);
@@ -173,8 +181,10 @@ export default function Dashboard() {
           dataSolucao: doc.data().dataSolucao,
           horaSolucao: doc.data().horaSolucao,
           tecnicoAtb: doc.data().tecnicoAtb,
-          imageUrls: doc.data().imageUrls || [], // Adicionar campo imageUrls
+          imageUrls: doc.data().imageUrls || [],
           imagemSolucao: doc.data().imagemSolucao,
+          playChamado: doc.data().playChamado || null,
+          chegadaLocal: doc.data().chegadaLocal || null,
         });
       });
 
@@ -330,6 +340,197 @@ export default function Dashboard() {
       toast.error("Erro ao atribuir o chamado.");
     }
   }
+
+  const getAddressFromCoordinates = async (latitude, longitude, apiKey) => {
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
+
+    try {
+      const response = await axios.get(url);
+      console.log(response.data); // Log detalhado da resposta
+      if (response.data.status === "OK") {
+        const address = response.data.results[0].formatted_address;
+        return address;
+      } else {
+        throw new Error(`Geocode error: ${response.data.status}`);
+      }
+    } catch (error) {
+      console.error("Erro ao obter o endereço:", error);
+      return null;
+    }
+  };
+
+  const confirmAction = (title, message, onConfirm) => {
+    confirmAlert({
+      title: title,
+      message: message,
+      buttons: [
+        {
+          label: "Sim",
+          onClick: onConfirm,
+        },
+        {
+          label: "Não",
+        },
+      ],
+    });
+  };
+
+  const handlePlayClick = async (id, ponto) => {
+    const chamado = chamados.find((chamado) => chamado.id === id);
+    if (chamado.playChamado) {
+      toast.error("Você já sinalizou que está a caminho do chamado!");
+      return;
+    }
+
+    confirmAction(
+      "Confirmação",
+      "Você deseja sinalizar que está a caminho?",
+      async () => {
+        if (!navigator.geolocation) {
+          toast.error("Geolocalização não é suportada pelo seu navegador.");
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const timestamp = new Date().toISOString();
+            const { latitude, longitude } = position.coords;
+            const address = await getAddressFromCoordinates(
+              latitude,
+              longitude,
+              "AIzaSyBCANKDqKej6Ek8Hzodf2G92MeSEqH1x6w"
+            );
+
+            if (!address) {
+              toast.error("Erro ao obter o endereço.");
+              return;
+            }
+
+            const formattedTimestamp = format(
+              new Date(timestamp),
+              "dd 'de' MMMM 'de' yyyy 'às' HH:mm:ss 'UTC'xxx",
+              { locale: ptBR }
+            );
+
+            try {
+              const ticketRef = doc(db, "chamados", id);
+              await updateDoc(ticketRef, {
+                playChamado: {
+                  timestamp: formattedTimestamp,
+                  location: new GeoPoint(latitude, longitude),
+                  address,
+                },
+              });
+              setChamados((prevChamados) =>
+                prevChamados.map((chamado) =>
+                  chamado.id === id
+                    ? {
+                        ...chamado,
+                        playChamado: {
+                          timestamp: formattedTimestamp,
+                          location: new GeoPoint(latitude, longitude),
+                          address,
+                        },
+                      }
+                    : chamado
+                )
+              );
+              toast.success(`Você sinalizou que está a caminho de ${ponto}`);
+            } catch (error) {
+              console.error("Erro ao registrar o play:", error);
+              toast.error("Erro ao registrar o play.");
+            }
+          },
+          (error) => {
+            console.error("Erro ao obter a geolocalização:", error);
+            toast.error("Erro ao obter a geolocalização.");
+          }
+        );
+      }
+    );
+  };
+
+  const handleChegadaClick = async (id) => {
+    const chamado = chamados.find((chamado) => chamado.id === id);
+    if (chamado.chegadaLocal) {
+      toast.error("Você já sinalizou que chegou no local!");
+      return;
+    }
+
+    confirmAction(
+      "Confirmação",
+      "Você deseja sinalizar que chegou ao local?",
+      async () => {
+        if (!chamado.playChamado) {
+          toast.error(
+            "Você precisa ativar 'Play Chamado' antes de registrar a chegada."
+          );
+          return;
+        }
+
+        if (!navigator.geolocation) {
+          toast.error("Geolocalização não é suportada pelo seu navegador.");
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const timestamp = new Date().toISOString();
+            const { latitude, longitude } = position.coords;
+            const address = await getAddressFromCoordinates(
+              latitude,
+              longitude,
+              "AIzaSyBCANKDqKej6Ek8Hzodf2G92MeSEqH1x6w"
+            );
+
+            if (!address) {
+              toast.error("Erro ao obter o endereço.");
+              return;
+            }
+
+            const formattedTimestamp = format(
+              new Date(timestamp),
+              "dd 'de' MMMM 'de' yyyy 'às' HH:mm:ss 'UTC'xxx",
+              { locale: ptBR }
+            );
+
+            try {
+              const ticketRef = doc(db, "chamados", id);
+              await updateDoc(ticketRef, {
+                chegadaLocal: {
+                  timestamp: formattedTimestamp,
+                  location: new GeoPoint(latitude, longitude),
+                  address,
+                },
+              });
+              setChamados((prevChamados) =>
+                prevChamados.map((chamado) =>
+                  chamado.id === id
+                    ? {
+                        ...chamado,
+                        chegadaLocal: {
+                          timestamp: formattedTimestamp,
+                          location: new GeoPoint(latitude, longitude),
+                          address,
+                        },
+                      }
+                    : chamado
+                )
+              );
+              toast.success("Chegada registrada com sucesso!");
+            } catch (error) {
+              console.error("Erro ao registrar a chegada:", error);
+              toast.error("Erro ao registrar a chegada.");
+            }
+          },
+          (error) => {
+            console.error("Erro ao obter a geolocalização:", error);
+            toast.error("Erro ao obter a geolocalização.");
+          }
+        );
+      }
+    );
+  };
 
   if (loading) {
     return (
@@ -553,6 +754,28 @@ export default function Dashboard() {
                         <td data-label="#">
                           <button
                             className="action"
+                            style={{
+                              backgroundColor: item.playChamado
+                                ? "#088F8F"
+                                : "#5bc0de",
+                            }}
+                            onClick={() =>
+                              handlePlayClick(item.id, item.cliente)
+                            }
+                            disabled={item.playChamado}
+                          >
+                            <FiPlay color="#fff" size={17} />
+                          </button>
+                          <button
+                            className="action"
+                            style={{ backgroundColor: "#088F8F" }}
+                            onClick={() => handleChegadaClick(item.id)}
+                            disabled={!item.playChamado}
+                          >
+                            <FiMapPin color="#fff" size={17} />
+                          </button>
+                          <button
+                            className="action"
                             style={{ backgroundColor: "#f6a935" }}
                             onClick={() => assignTicketToSelf(item.id)}
                             disabled={
@@ -560,21 +783,21 @@ export default function Dashboard() {
                               item.tecnicoAtb === userName
                             }
                           >
-                            <FiUserPlus color="#fff" size={17} />
+                            <FiUserPlus color="#fff" size={15} />
                           </button>
                           <button
                             className="action"
                             style={{ backgroundColor: "purple" }}
                             onClick={() => handleOpenSolutionModal(item.id)}
                           >
-                            <FiCrosshair color="#fff" size={17} />
+                            <FiCrosshair color="#fff" size={15} />
                           </button>
                           <button
                             className="action"
                             style={{ backgroundColor: "#3583f6" }}
                             onClick={() => toggleModal(item)}
                           >
-                            <FiSearch color="#fff" size={17} />
+                            <FiSearch color="#fff" size={15} />
                           </button>
 
                           {showSolutionModal && (
@@ -589,9 +812,8 @@ export default function Dashboard() {
                             className="action"
                             style={{ backgroundColor: "#f6a935" }}
                           >
-                            <FiEdit2 color="#fff" size={17} />
+                            <FiEdit2 color="#fff" size={15} />
                           </Link>
-                          {/* atribuir-se */}
                         </td>
                       </tr>
                     ))}
