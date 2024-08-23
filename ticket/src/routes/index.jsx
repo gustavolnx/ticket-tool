@@ -9,6 +9,8 @@ import Costumers from "../pages/Customers";
 import New from "../pages/New";
 import Atendidos from "../pages/Atendidos";
 import Equipamentos from "../pages/Equipamentos";
+import Newchecking from "../pages/Newchecking";
+import Checking from "../pages/Checking";
 
 function RoutesApp() {
   return (
@@ -64,6 +66,22 @@ function RoutesApp() {
         }
       />
       <Route
+        path="/newchecking/"
+        element={
+          <Private>
+            <Newchecking />
+          </Private>
+        }
+      />
+      <Route
+        path="/newchecking/:id"
+        element={
+          <Private>
+            <Newchecking />
+          </Private>
+        }
+      />
+      <Route
         path="/atendidos"
         element={
           <Private>
@@ -76,6 +94,14 @@ function RoutesApp() {
         element={
           <Private>
             <Equipamentos />
+          </Private>
+        }
+      />
+      <Route
+        path="/checking"
+        element={
+          <Private>
+            <Checking />
           </Private>
         }
       />

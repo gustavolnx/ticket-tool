@@ -11,6 +11,8 @@ import {
   FiTrello,
   FiUserPlus,
   FiCpu,
+  FiCamera,
+  FiUsers,
 } from "react-icons/fi";
 import "./header.css";
 
@@ -34,9 +36,17 @@ export default function Header() {
         <FiThumbsUp color="#fff" size={24} />
         Atendidos
       </Link>
+      <Link to="/equipe">
+        <FiUsers color="#fff" size={24} />
+        Equipe
+      </Link>
       <Link to="/customers">
         <FiUser color="#fff" size={24} />
         Clientes
+      </Link>
+      <Link to="/checking">
+        <FiCamera color="#fff" size={24} />
+        Checking
       </Link>
       <Link to="/equipamentos">
         <FiCpu color="#fff" size={24} />
