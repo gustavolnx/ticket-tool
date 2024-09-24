@@ -18,7 +18,7 @@ export default function SignIn() {
 
     if (name !== "" && email !== "" && password !== "") {
       console.log("Submitting with role:", role);
-      await signUp(email, password, name, isAdmin, role);
+      await signUp(email, password, name, isAdmin, role); // Passe o cargo para a função signUp
     }
   }
 

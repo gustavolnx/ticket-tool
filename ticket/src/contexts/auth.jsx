@@ -21,13 +21,11 @@ function AuthProvider({ children }) {
       const storageUser = localStorage.getItem("@tickets");
       if (storageUser) {
         setUser(JSON.parse(storageUser));
-        setLoading(false);
       }
-
       setLoading(false);
     }
     loadUser();
-  });
+  }, []); // Add an empty dependency array here
 
   async function signIn(email, password) {
     setLoadingAuth(true);
@@ -41,6 +39,7 @@ function AuthProvider({ children }) {
         let isAdmin = docSnap.data().isAdmin || false;
 
         let data = {
+          role: docSnap.data().role,
           uid: uid,
           nome: docSnap.data().nome,
           email: value.user.email,
@@ -63,7 +62,7 @@ function AuthProvider({ children }) {
   const navigate = useNavigate();
 
   // cadastrar usuario
-  async function signUp(email, password, name, isAdmin = false) {
+  async function signUp(email, password, name, isAdmin = false, role) {
     setLoadingAuth(true);
 
     await createUserWithEmailAndPassword(auth, email, password)
@@ -74,12 +73,15 @@ function AuthProvider({ children }) {
           nome: name,
           avatarUrl: null,
           isAdmin: isAdmin,
+          role: role, // Adicione o cargo ao salvar os dados
         }).then(() => {
           let data = {
             uid: uid,
             nome: name,
             email: value.user.email,
             avatarUrl: null,
+            isAdmin: isAdmin,
+            role: role, // Armazene o cargo no estado do usuário
           };
           setUser(data);
           storageUser(data);

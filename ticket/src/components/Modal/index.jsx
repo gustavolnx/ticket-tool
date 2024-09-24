@@ -1,9 +1,47 @@
-import { useState } from "react";
+import { useState, useEffect, useContext } from "react";
 import "./modal.css";
-import { FiX } from "react-icons/fi";
+import { FiX, FiTrash } from "react-icons/fi";
+import { db } from "../../services/firebaseConnection";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+import { AuthContext } from "../../contexts/auth";
+import { confirmAlert } from "react-confirm-alert";
+import "react-confirm-alert/src/react-confirm-alert.css";
 
 export default function Modal({ conteudo, close }) {
   const [expandedImage, setExpandedImage] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [commentText, setCommentText] = useState("");
+
+  const { user } = useContext(AuthContext);
+
+  useEffect(() => {
+    const loadComments = async () => {
+      try {
+        const q = query(
+          collection(db, "comments"),
+          where("ticketId", "==", conteudo.id)
+        );
+        const querySnapshot = await getDocs(q);
+        const commentsList = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setComments(commentsList);
+      } catch (error) {
+        console.error("Erro ao carregar os comentários: ", error);
+      }
+    };
+
+    loadComments();
+  }, [conteudo.id]);
 
   const handleImageClick = (url) => {
     setExpandedImage(url);
@@ -13,17 +51,62 @@ export default function Modal({ conteudo, close }) {
     setExpandedImage(null);
   };
 
+  const handleCommentSubmit = async () => {
+    if (commentText.trim() === "") return;
+
+    const newComment = {
+      ticketId: conteudo.id,
+      userName: user.nome,
+      userRole: user.role || "Usuário",
+      text: commentText,
+      dateTime: new Date().toISOString(),
+    };
+
+    try {
+      const docRef = await addDoc(collection(db, "comments"), newComment);
+      setComments([...comments, { id: docRef.id, ...newComment }]);
+      setCommentText("");
+    } catch (error) {
+      console.error("Erro ao enviar o comentário: ", error);
+    }
+  };
+
+  const handleDeleteComment = (commentId) => {
+    confirmAlert({
+      title: "Confirmação de Exclusão",
+      message: "Você tem certeza que deseja deletar este comentário?",
+      buttons: [
+        {
+          label: "Sim",
+          onClick: async () => {
+            try {
+              await deleteDoc(doc(db, "comments", commentId));
+              setComments(
+                comments.filter((comment) => comment.id !== commentId)
+              );
+            } catch (error) {
+              console.error("Erro ao deletar o comentário: ", error);
+            }
+          },
+        },
+        {
+          label: "Não",
+          onClick: () => {},
+        },
+      ],
+    });
+  };
+
   return (
     <div className="modal">
       <div className="container">
         <button className="close" onClick={close}>
-          <FiX size={25} color="#fff" />
-          Fechar
+          <FiX size={16} color="#fff" />
         </button>
 
-        <main>
+        <div className="information-section">
           <h2>Detalhes do chamado</h2>
-          <div className="row">
+          <div className="row" style={{ marginTop: "1rem" }}>
             <span>
               Cliente: <i>{conteudo.cliente}</i>
             </span>
@@ -32,50 +115,43 @@ export default function Modal({ conteudo, close }) {
             <span>
               Assunto: <i>{conteudo.assunto}</i>
             </span>
-            <span>
-              Cadastrado em : <i>{conteudo.createdFormat}</i>
-            </span>
+            <div className="row" style={{ marginTop: "1rem" }}>
+              <span>
+                Cadastrado em : <i>{conteudo.createdFormat}</i>
+              </span>
+            </div>
           </div>
-
           <div className="row">
             <span>
-              Status:
-              <i
-                className="status-badge"
-                style={{
-                  color: "#fff",
-                  backgroundColor:
-                    conteudo.status === "Aberto"
-                      ? "rgb(53, 131, 246)"
-                      : conteudo.status === "Atendido"
-                      ? "#5cb85c"
-                      : "#ffcc00",
-                  textShadow: "1px 2px 0px #000",
-                }}
-              >
-                {conteudo.status}
-              </i>
+              Status: <i>{conteudo.status}</i>
             </span>
+
+            <div className="row" style={{ marginTop: "1rem" }}>
+              <span>
+                A caminho :{" "}
+                <i>
+                  {conteudo.playChamado && conteudo.playChamado.timestamp
+                    ? conteudo.playChamado.timestamp.replace(/ UTC.*$/, "")
+                    : "Não disponível"}
+                </i>
+              </span>
+            </div>
+            <div className="row" style={{ marginTop: "1rem" }}>
+              <span>
+                Chegada Local:{" "}
+                <i>
+                  {conteudo.chegadaLocal && conteudo.chegadaLocal.timestamp
+                    ? conteudo.chegadaLocal.timestamp.replace(/ UTC.*$/, "")
+                    : "Não disponível"}
+                </i>
+              </span>
+            </div>
+          </div>
+          <div className="row">
             <span>
-              Prioridade:
-              <i
-                className="prioridade-badge"
-                style={{
-                  color: "#ffffff",
-                  backgroundColor:
-                    conteudo.prioridade === "Urgente"
-                      ? "#ff0000"
-                      : conteudo.prioridade === "Moderada"
-                      ? "#FFCC00"
-                      : "#5cb85c",
-                  textShadow: "1px 2px 0px #000",
-                }}
-              >
-                {conteudo.prioridade}
-              </i>
+              Prioridade: <i>{conteudo.prioridade}</i>
             </span>
           </div>
-
           <div className="row">
             <span>
               Técnico: <i>{conteudo.tecnicoAtb}</i>
@@ -151,7 +227,49 @@ export default function Modal({ conteudo, close }) {
               </i>
             </div>
           )}
-        </main>
+        </div>
+
+        <div className="comments-tab">
+          <h3>Comentários</h3>
+          <div id="comments-list">
+            {comments.length > 0 ? (
+              comments.map((comment, index) => (
+                <div key={index} className="comment">
+                  <div className="comment-header">
+                    <p>
+                      <strong>
+                        {comment.userName} ({comment.userRole})
+                      </strong>
+                    </p>
+                    <button
+                      className="delete-comment"
+                      onClick={() => handleDeleteComment(comment.id)}
+                    >
+                      <FiTrash size={14} />
+                    </button>
+                  </div>
+                  <p>{comment.text}</p>
+                  <p>
+                    <em>{new Date(comment.dateTime).toLocaleString()}</em>
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p>Sem comentários</p>
+            )}
+          </div>
+          <div className="comment-box">
+            <textarea
+              id="comment-input"
+              placeholder="Digite seu comentário"
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+            ></textarea>
+            <button id="submit-comment" onClick={handleCommentSubmit}>
+              Enviar
+            </button>
+          </div>
+        </div>
       </div>
 
       {expandedImage && (

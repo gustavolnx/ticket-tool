@@ -36,7 +36,7 @@ export default function Header() {
         <FiThumbsUp color="#fff" size={24} />
         Atendidos
       </Link>
-      <Link to="/equipe">
+      <Link to="#" onClick={() => alert("Função em desenvolvimento")}>
         <FiUsers color="#fff" size={24} />
         Equipe
       </Link>
