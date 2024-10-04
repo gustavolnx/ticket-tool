@@ -11,6 +11,7 @@ import Atendidos from "../pages/Atendidos";
 import Equipamentos from "../pages/Equipamentos";
 import Newchecking from "../pages/Newchecking";
 import Checking from "../pages/Checking";
+import Equipe from "../pages/Equipe";
 
 function RoutesApp() {
   return (
@@ -23,6 +24,14 @@ function RoutesApp() {
             <SignUp />
           </Private>
         }
+      />
+
+      <Route path="/equipe"
+      element={
+        <Private>
+          <Equipe/>
+        </Private>
+      }
       />
 
       <Route

@@ -15,7 +15,7 @@ import {
   where,
 } from "firebase/firestore";
 import { toast } from "react-toastify";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, redirect } from "react-router-dom";
 
 import {
   ref,
@@ -39,7 +39,7 @@ export default function New() {
   const [customerSelected, setCustomerSelected] = useState(0);
 
   const [complemento, setComplemento] = useState("");
-  const [assunto, setAssunto] = useState("Acesso remoto");
+  const [assunto, setAssunto] = useState("Não informado");
   const [status, setStatus] = useState("Aberto");
   const [prioridade, setPrioridade] = useState("Baixa");
   const [idCustomer, setIdCustomer] = useState(false);
@@ -254,17 +254,22 @@ export default function New() {
           console.log(error);
         });
     } else {
-      // Registrando chamado
       await addDoc(collection(db, "chamados"), chamadoData)
-        .then(() => {
-          toast.success("Chamado registrado com sucesso!");
-          setComplemento("");
-          setCustomerSelected(0);
-        })
-        .catch((error) => {
-          toast.error("Erro ao registrar chamado, tente novamente!");
-          console.log(error);
+      .then(() => {
+        toast.success("Chamado registrado com sucesso!", {
+          onClose: () => {
+            navigate("/dashboard");
+          },
+          autoClose: 3000
         });
+    
+        setComplemento("");
+        setCustomerSelected(0);
+      })
+      .catch((error) => {
+        toast.error("Erro ao registrar chamado, tente novamente!");
+        console.log(error);
+      });
     }
   }
 
@@ -294,6 +299,7 @@ export default function New() {
             )}
             <label>Assunto</label>
             <select value={assunto} onChange={handleChangeSelect}>
+              <option value="Não informado">Não informado</option>
               <option value="Acesso remoto">Acesso remoto</option>
               <option value="Visita Tecnica">Visita técnica</option>
               <option value="Troca de aparelho">Troca de aparelho</option>
