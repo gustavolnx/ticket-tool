@@ -36,10 +36,12 @@ export default function Header() {
         <FiThumbsUp color="#fff" size={24} />
         Atendidos
       </Link>
-      <Link to="/equipe">
-        <FiUsers color="#fff" size={24} />
-        Equipe
-      </Link>
+      {isAdmin && (
+        <Link to="/equipe">
+          <FiUsers color="#fff" size={24} />
+          Equipe
+        </Link>
+      )}
       <Link to="/customers">
         <FiUser color="#fff" size={24} />
         Clientes
@@ -58,7 +60,6 @@ export default function Header() {
           Novo usuário
         </Link>
       )}
-
       <Link to="/profile">
         <FiSettings color="#fff" size={24} />
         Perfil

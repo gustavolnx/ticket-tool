@@ -1,47 +1,70 @@
-input,
-textarea,
-select {
-  margin-bottom: 1em;
-  padding: 0.7em;
-  border: 0;
-  border-radius: 5px;
-  max-width: 600px;
+.content {
+  padding: 20px;
 }
 
 .container-block {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.membros-cadastrados {
-  padding-top: 1rem;
-  background-color: white;
-  border-radius: 2px;
-  padding-bottom: 1rem;
-  padding-left: 1rem;
+.listaUser {
+  display: flex;
+  flex-direction: row;
+  list-style-type: none;
+  padding: 0;
 }
 
-.memberCard{
-    width: 250px;
-    max-width: 300px;
-    max-height: 300px;
-    height: 250px;
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
+.memberCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin: 10px;
+  border-radius: 5px;
+  width: 20%;
+}
+
+.chamadosList h4{
+  text-align: center;
+}
+
+
+.memberCard img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.deleteButton {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  margin-top: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.deleteButton:hover {
+  background-color: #ff1a1a;
+}
+
+h3, p {
+  margin: 5px 0;
+  text-align: center;
+}
+
+
+@media only screen and (max-width: 1280px) {
+  .listaUser{
+    flex-wrap: wrap;
     justify-content: center;
-}
-
-.memberCard img{
-    width: 100px;
-    height: 100px;
-    border-radius: 100%;
-}
-
-.listaUser{
-        gap: 30px;
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        grid-template-rows: auto; 
+  }
+  .memberCard{
+    width: 30%;
+  }
 }

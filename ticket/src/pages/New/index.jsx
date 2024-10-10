@@ -15,15 +15,12 @@ import {
   where,
 } from "firebase/firestore";
 import { toast } from "react-toastify";
-import { useParams, useNavigate, redirect } from "react-router-dom";
-
+import { useParams, useNavigate } from "react-router-dom";
 import {
   ref,
   uploadBytes,
   getDownloadURL,
-  deleteObject,
 } from "firebase/storage";
-
 import "./new.css";
 
 const listRef = collection(db, "customers");
@@ -32,7 +29,7 @@ export default function New() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const { id } = useParams();
-  const [files, setFiles] = useState([]); // Alterado para suportar múltiplos arquivos
+  const [files, setFiles] = useState([]); // Suporte a múltiplos arquivos
 
   const [customers, setCustomers] = useState([]);
   const [loadCustomer, setLoadCustomer] = useState(true);
@@ -49,9 +46,9 @@ export default function New() {
   const [loadingTecnicosCadastrados, setLoadingTecnicosCadastrados] =
     useState(true);
   const [equipamentos, setEquipamentos] = useState([]);
+   const [imageUrls, setImageUrls] = useState([]); // URLs das imagens existentes
   const [equipamentoSelecionado, setEquipamentoSelecionado] =
     useState("Não informado");
-  const [imageUrls, setImageUrls] = useState([]); // Adicionar estado para as URLs das imagens existentes
 
   useEffect(() => {
     async function loadTecnicosCadastrados() {
@@ -59,8 +56,12 @@ export default function New() {
         const usersCollection = collection(db, "users");
         const querySnapshot = await getDocs(usersCollection);
         const TecnicosCadastradosData = querySnapshot.docs
-          .map((doc) => ({ id: doc.id, nome: doc.data().nome }))
-          .filter((user) => user.nome !== "");
+          .map((doc) => ({
+            id: doc.id,
+            nome: doc.data().nome,
+            oculto: doc.data().isHidden || false, // Verifica se o técnico está oculto
+          }))
+          .filter((user) => !user.oculto); // Filtra os técnicos ocultos
 
         setTecnicosCadastrados(TecnicosCadastradosData);
       } catch (error) {
@@ -161,17 +162,14 @@ export default function New() {
 
   function handleOptionChange(e) {
     setStatus(e.target.value);
-    console.log(e.target.value);
   }
 
   function handleChangePrioridadeSelect(e) {
     setPrioridade(e.target.value);
-    console.log(e.target.value);
   }
 
   function handleChangeTecnicoSelect(e) {
     setTecnicoAtb(e.target.value);
-    console.log(e.target.value);
   }
 
   function handleFileChange(e) {

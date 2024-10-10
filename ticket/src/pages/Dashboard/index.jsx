@@ -837,6 +837,9 @@ export default function Dashboard() {
           close={() => setShowPostModal(!showPostModal)}
         />
       )}
+      <footer>
+        <h2>Para garantir sua segurança e bem-estar, é indispensável o uso correto dos Equipamentos de Proteção Individual (EPI) durante todas as atividades.</h2>
+      </footer>
     </div>
   );
 }
