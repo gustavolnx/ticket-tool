@@ -12,6 +12,7 @@ import Equipamentos from "../pages/Equipamentos";
 import Newchecking from "../pages/Newchecking";
 import Checking from "../pages/Checking";
 import Equipe from "../pages/Equipe";
+import Monitoramento  from "../pages/Monitoramento";
 
 function RoutesApp() {
   return (
@@ -25,6 +26,13 @@ function RoutesApp() {
           </Private>
         }
       />
+
+      <Route path="/monitoramento"
+      element={
+        <Private>
+          <Monitoramento/>
+        </Private>
+      }/>
 
       <Route path="/equipe"
       element={

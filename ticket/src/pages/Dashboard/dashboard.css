@@ -20,6 +20,7 @@
 .searchTecPonto {
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
 .new:hover {
@@ -147,6 +148,10 @@ table td .badge {
   height: 80px;
   /* border: 1px solid red; */
   padding-bottom: 16rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .filter input {

@@ -46,7 +46,7 @@ export default function New() {
   const [loadingTecnicosCadastrados, setLoadingTecnicosCadastrados] =
     useState(true);
   const [equipamentos, setEquipamentos] = useState([]);
-   const [imageUrls, setImageUrls] = useState([]); // URLs das imagens existentes
+  const [imageUrls, setImageUrls] = useState([]); // URLs das imagens existentes
   const [equipamentoSelecionado, setEquipamentoSelecionado] =
     useState("Não informado");
 
@@ -202,6 +202,27 @@ export default function New() {
     );
   };
 
+  async function addHistoryEntry(chamadoId, field, newValue, userId) {
+    const docRef = doc(db, "chamados", chamadoId);
+    const chamadoSnapshot = await getDoc(docRef);
+    
+    if (chamadoSnapshot.exists()) {
+      const chamadoData = chamadoSnapshot.data();
+      const history = chamadoData.history || [];
+      
+      const newEntry = {
+        field: field,
+        newValue: newValue,
+        changedBy: userId,
+        timestamp: new Date(),
+      };
+      
+      history.push(newEntry);
+      
+      await updateDoc(docRef, { history });
+    }
+  }
+
   async function handleRegister(e) {
     e.preventDefault();
 
@@ -240,9 +261,27 @@ export default function New() {
     if (idCustomer) {
       // Atualizando chamado
       const docRef = doc(db, "chamados", id);
+      const prevSnapshot = await getDoc(docRef);
+      const prevData = prevSnapshot.data();
+
       await updateDoc(docRef, chamadoData)
-        .then(() => {
+        .then(async () => {
           toast.info("Chamado editado com sucesso!");
+          
+          // Registro de alterações
+          if (prevData.status !== status) {
+            await addHistoryEntry(id, "status", status, user.uid);
+          }
+          if (prevData.solucaoChamado !== solucaoChamado) {
+            await addHistoryEntry(id, "solucaoChamado", solucaoChamado, user.uid);
+          }
+          if (prevData.complemento !== complemento) {
+            await addHistoryEntry(id, "complemento", complemento, user.uid);
+          }
+          if (prevData.tecnicoAtb !== tecnicoAtb) {
+            await addHistoryEntry(id, "tecnicoAtb", tecnicoAtb, user.uid);
+          }
+
           setComplemento("");
           setCustomerSelected(0);
           navigate("/dashboard");
@@ -253,21 +292,24 @@ export default function New() {
         });
     } else {
       await addDoc(collection(db, "chamados"), chamadoData)
-      .then(() => {
-        toast.success("Chamado registrado com sucesso!", {
-          onClose: () => {
-            navigate("/dashboard");
-          },
-          autoClose: 3000
+        .then((docRef) => {
+          toast.success("Chamado registrado com sucesso!", {
+            onClose: () => {
+              navigate("/dashboard");
+            },
+            autoClose: 3000
+          });
+
+          // Registro inicial de criação
+          addHistoryEntry(docRef.id, "criação", "Chamado criado", user.uid);
+
+          setComplemento("");
+          setCustomerSelected(0);
+        })
+        .catch((error) => {
+          toast.error("Erro ao registrar chamado, tente novamente!");
+          console.log(error);
         });
-    
-        setComplemento("");
-        setCustomerSelected(0);
-      })
-      .catch((error) => {
-        toast.error("Erro ao registrar chamado, tente novamente!");
-        console.log(error);
-      });
     }
   }
 

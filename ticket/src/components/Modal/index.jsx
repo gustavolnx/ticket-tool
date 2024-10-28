@@ -11,6 +11,7 @@ import {
   deleteDoc,
   doc,
   updateDoc,
+  getDoc,
 } from "firebase/firestore";
 import { AuthContext } from "../../contexts/auth";
 import { confirmAlert } from "react-confirm-alert";
@@ -135,9 +136,17 @@ export default function Modal({ conteudo, close }) {
   const handleSaveField = async (field) => {
     try {
       const ticketRef = doc(db, "chamados", conteudo.id);
+      const prevSnapshot = await getDoc(ticketRef);
+      const prevData = prevSnapshot.data();
+
       await updateDoc(ticketRef, {
         [field]: editableContent[field],
       });
+
+      // Log changes in history
+      if (prevData[field] !== editableContent[field]) {
+        await addHistoryEntry(conteudo.id, field, editableContent[field], user.uid);
+      }
 
       toast.success(`${field.charAt(0).toUpperCase() + field.slice(1)} editado com sucesso!`);
       setEditField(null); // Sai do modo de edição
@@ -146,6 +155,27 @@ export default function Modal({ conteudo, close }) {
       console.error("Erro ao editar o campo: ", error);
     }
   };
+
+  async function addHistoryEntry(chamadoId, field, newValue, userId) {
+    const docRef = doc(db, "chamados", chamadoId);
+    const chamadoSnapshot = await getDoc(docRef);
+    
+    if (chamadoSnapshot.exists()) {
+      const chamadoData = chamadoSnapshot.data();
+      const history = chamadoData.history || [];
+      
+      const newEntry = {
+        field: field,
+        newValue: newValue,
+        changedBy: userId,
+        timestamp: new Date(),
+      };
+      
+      history.push(newEntry);
+      
+      await updateDoc(docRef, { history });
+    }
+  }
 
   return (
     <div className="modal">

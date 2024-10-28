@@ -64,6 +64,11 @@ export default function Header() {
         <FiSettings color="#fff" size={24} />
         Perfil
       </Link>
+
+        <Link to="/monitoramento">
+          <FiUserPlus color="#fff" size={24}/>
+            Monitoramento
+        </Link>
     </div>
   );
 }
