@@ -177,6 +177,14 @@ export default function Modal({ conteudo, close }) {
     }
   }
 
+  const handleTecnicoChange = (tecnico) => {
+    const updatedTecnicos = editableContent.tecnicosAtb.includes(tecnico)
+      ? editableContent.tecnicosAtb.filter((tec) => tec !== tecnico)
+      : [...editableContent.tecnicosAtb, tecnico];
+
+    setEditableContent({ ...editableContent, tecnicosAtb: updatedTecnicos });
+  };
+
   return (
     <div className="modal">
       <div className="container">
@@ -339,39 +347,39 @@ export default function Modal({ conteudo, close }) {
             </span>
           </div>
 
-          {/* Técnico */}
+          {/* Técnicos */}
           <div className="row">
             <span>
-              Técnico:{" "}
-              {editField === "tecnicoAtb" ? (
+              Técnicos:{" "}
+              {editField === "tecnicosAtb" ? (
                 <>
-                  <select
-                    value={editableContent.tecnicoAtb}
-                    onChange={(e) =>
-                      setEditableContent({ ...editableContent, tecnicoAtb: e.target.value })
-                    }
-                  >
-                    <option value="Não atribuído">Não atribuído</option>
+                  <div className="tecnicos-list">
                     {tecnicos.map((tec) => (
-                      <option key={tec.id} value={tec.nome}>
-                        {tec.nome}
-                      </option>
+                      <div key={tec.id} className="tecnico-item">
+                        <input
+                          type="checkbox"
+                          id={`tecnico-${tec.id}`}
+                          checked={editableContent.tecnicosAtb.includes(tec.nome)}
+                          onChange={() => handleTecnicoChange(tec.nome)}
+                        />
+                        <label htmlFor={`tecnico-${tec.id}`}>{tec.nome}</label>
+                      </div>
                     ))}
-                  </select>
+                  </div>
                   <FiCheck
                     size={18}
                     color="green"
-                    onClick={() => handleSaveField("tecnicoAtb")}
+                    onClick={() => handleSaveField("tecnicosAtb")}
                     className="icon-edit"
                   />
                 </>
               ) : (
                 <>
-                  <i>{editableContent.tecnicoAtb}</i>
+                  <i>{editableContent.tecnicosAtb.join(", ")}</i>
                   <FiEdit
                     size={18}
                     color="blue"
-                    onClick={() => toggleEditField("tecnicoAtb")}
+                    onClick={() => toggleEditField("tecnicosAtb")}
                     className="icon-edit"
                   />
                 </>

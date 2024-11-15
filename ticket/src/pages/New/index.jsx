@@ -29,8 +29,7 @@ export default function New() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const { id } = useParams();
-  const [files, setFiles] = useState([]); // Suporte a múltiplos arquivos
-
+  const [files, setFiles] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loadCustomer, setLoadCustomer] = useState(true);
   const [customerSelected, setCustomerSelected] = useState(0);
@@ -41,12 +40,12 @@ export default function New() {
   const [prioridade, setPrioridade] = useState("Baixa");
   const [idCustomer, setIdCustomer] = useState(false);
   const [solucaoChamado, setSolucaoChamado] = useState("Não solucionado");
-  const [tecnicoAtb, setTecnicoAtb] = useState("Não atribuído");
+  const [tecnicosAtb, setTecnicosAtb] = useState([]);
   const [TecnicosCadastrados, setTecnicosCadastrados] = useState([]);
   const [loadingTecnicosCadastrados, setLoadingTecnicosCadastrados] =
     useState(true);
   const [equipamentos, setEquipamentos] = useState([]);
-  const [imageUrls, setImageUrls] = useState([]); // URLs das imagens existentes
+  const [imageUrls, setImageUrls] = useState([]);
   const [equipamentoSelecionado, setEquipamentoSelecionado] =
     useState("Não informado");
 
@@ -59,9 +58,9 @@ export default function New() {
           .map((doc) => ({
             id: doc.id,
             nome: doc.data().nome,
-            oculto: doc.data().isHidden || false, // Verifica se o técnico está oculto
+            oculto: doc.data().isHidden || false,
           }))
-          .filter((user) => !user.oculto); // Filtra os técnicos ocultos
+          .filter((user) => !user.oculto);
 
         setTecnicosCadastrados(TecnicosCadastradosData);
       } catch (error) {
@@ -77,7 +76,7 @@ export default function New() {
 
   useEffect(() => {
     async function loadCustomers() {
-      const querySnapshot = await getDocs(listRef)
+      await getDocs(listRef)
         .then((snapshot) => {
           let lista = [];
           snapshot.forEach((doc) => {
@@ -141,8 +140,8 @@ export default function New() {
         setPrioridade(snapshot.data().prioridade);
         setComplemento(snapshot.data().complemento);
         setSolucaoChamado(snapshot.data().solucaoChamado);
-        setTecnicoAtb(snapshot.data().tecnicoAtb);
-        setImageUrls(snapshot.data().imageUrls || []); // Carregar as URLs das imagens existentes
+        setTecnicosAtb(snapshot.data().tecnicosAtb || []);
+        setImageUrls(snapshot.data().imageUrls || []);
 
         let index = lista.findIndex(
           (item) => item.id === snapshot.data().clienteId
@@ -152,7 +151,7 @@ export default function New() {
           snapshot.data().equipamento || "Não informado"
         );
         setIdCustomer(true);
-        loadEquipamentos(); // Load equipamentos when editing a chamado
+        loadEquipamentos();
       })
       .catch((error) => {
         console.log("Deu erro", error);
@@ -168,10 +167,6 @@ export default function New() {
     setPrioridade(e.target.value);
   }
 
-  function handleChangeTecnicoSelect(e) {
-    setTecnicoAtb(e.target.value);
-  }
-
   function handleFileChange(e) {
     if (e.target.files.length > 0) {
       const selectedFiles = Array.from(e.target.files);
@@ -185,7 +180,7 @@ export default function New() {
 
   function handleChangeCustomer(e) {
     setCustomerSelected(e.target.value);
-    loadEquipamentos(); // Load equipamentos when changing customer
+    loadEquipamentos();
   }
 
   function handleChangeEquipamentoSelect(e) {
@@ -194,6 +189,11 @@ export default function New() {
 
   function handleChangeSolucaoSelect(e) {
     setSolucaoChamado(e.target.value);
+  }
+
+  function handleChangeTecnicoSelect(e) {
+    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+    setTecnicosAtb(selectedOptions);
   }
 
   const handleRemoveImage = (index) => {
@@ -205,20 +205,20 @@ export default function New() {
   async function addHistoryEntry(chamadoId, field, newValue, userId) {
     const docRef = doc(db, "chamados", chamadoId);
     const chamadoSnapshot = await getDoc(docRef);
-    
+
     if (chamadoSnapshot.exists()) {
       const chamadoData = chamadoSnapshot.data();
       const history = chamadoData.history || [];
-      
+
       const newEntry = {
         field: field,
         newValue: newValue,
         changedBy: userId,
         timestamp: new Date(),
       };
-      
+
       history.push(newEntry);
-      
+
       await updateDoc(docRef, { history });
     }
   }
@@ -226,7 +226,7 @@ export default function New() {
   async function handleRegister(e) {
     e.preventDefault();
 
-    let newImageUrls = [...imageUrls]; // Manter as URLs das imagens existentes
+    let newImageUrls = [...imageUrls];
 
     if (files.length > 0) {
       const uploadPromises = files.map((file) => {
@@ -252,14 +252,13 @@ export default function New() {
       complemento: complemento,
       solucaoChamado: solucaoChamado,
       userId: user.uid,
-      tecnicoAtb: tecnicoAtb,
+      tecnicosAtb: tecnicosAtb,
       equipamento: equipamentoInfo,
       imageUrls: newImageUrls,
       created: new Date(),
     };
 
     if (idCustomer) {
-      // Atualizando chamado
       const docRef = doc(db, "chamados", id);
       const prevSnapshot = await getDoc(docRef);
       const prevData = prevSnapshot.data();
@@ -267,8 +266,7 @@ export default function New() {
       await updateDoc(docRef, chamadoData)
         .then(async () => {
           toast.info("Chamado editado com sucesso!");
-          
-          // Registro de alterações
+
           if (prevData.status !== status) {
             await addHistoryEntry(id, "status", status, user.uid);
           }
@@ -278,8 +276,8 @@ export default function New() {
           if (prevData.complemento !== complemento) {
             await addHistoryEntry(id, "complemento", complemento, user.uid);
           }
-          if (prevData.tecnicoAtb !== tecnicoAtb) {
-            await addHistoryEntry(id, "tecnicoAtb", tecnicoAtb, user.uid);
+          if (JSON.stringify(prevData.tecnicosAtb) !== JSON.stringify(tecnicosAtb)) {
+            await addHistoryEntry(id, "tecnicosAtb", tecnicosAtb.join(", "), user.uid);
           }
 
           setComplemento("");
@@ -300,7 +298,6 @@ export default function New() {
             autoClose: 3000
           });
 
-          // Registro inicial de criação
           addHistoryEntry(docRef.id, "criação", "Chamado criado", user.uid);
 
           setComplemento("");
@@ -318,116 +315,148 @@ export default function New() {
       <Header />
       <div className="content">
         <Title name={id ? "Editando chamado" : "Novo chamado"}>
-          {" "}
           <FiPlusCircle size={25} />
         </Title>
         <div className="container">
           <form className="form-profile" onSubmit={handleRegister}>
-            <label>Cliente</label>
-            {loadCustomer ? (
-              <input type="text" disabled={true} value={"Carregando..."} />
-            ) : (
-              <select value={customerSelected} onChange={handleChangeCustomer}>
-                {customers.map((item, index) => {
-                  return (
-                    <option key={item.id} value={index}>
-                      {item.pontoLocal}
-                    </option>
-                  );
-                })}
+            <div className="form-group">
+              <label>Cliente</label>
+              {loadCustomer ? (
+                <input type="text" disabled={true} value={"Carregando..."} />
+              ) : (
+                <select value={customerSelected} onChange={handleChangeCustomer}>
+                  {customers.map((item, index) => {
+                    return (
+                      <option key={item.id} value={index}>
+                        {item.pontoLocal}
+                      </option>
+                    );
+                  })}
+                </select>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label>Assunto</label>
+              <select value={assunto} onChange={handleChangeSelect}>
+                <option value="Não informado">Não informado</option>
+                <option value="Acesso remoto">Acesso remoto</option>
+                <option value="Visita Tecnica">Visita técnica</option>
+                <option value="Troca de aparelho">Troca de aparelho</option>
               </select>
-            )}
-            <label>Assunto</label>
-            <select value={assunto} onChange={handleChangeSelect}>
-              <option value="Não informado">Não informado</option>
-              <option value="Acesso remoto">Acesso remoto</option>
-              <option value="Visita Tecnica">Visita técnica</option>
-              <option value="Troca de aparelho">Troca de aparelho</option>
-            </select>
-            <label>Equipamento</label>
-            <select
-              value={equipamentoSelecionado}
-              onChange={handleChangeEquipamentoSelect}
-            >
-              <option value="Não informado">Não informado</option>
-              {equipamentos.length > 0 ? (
-                equipamentos.map((equipamento) => (
-                  <option
-                    key={equipamento.id}
-                    value={`${equipamento.categoria} - ${equipamento.patrimonio}`}
-                  >{`${equipamento.categoria} - ${equipamento.patrimonio}`}</option>
-                ))
-              ) : (
-                <option value="">Nenhum equipamento encontrado</option>
-              )}
-            </select>
-            <label>Status</label>
-            <select
-              name="status"
-              value={status}
-              onChange={handleOptionChange}
-              className="select-status"
-            >
-              <option value="Aberto">Aberto</option>
-              <option value="Progresso">Em progresso</option>
-              <option value="Atendido">Atendido</option>
-            </select>
-            <label>Prioridade</label>
-            <select value={prioridade} onChange={handleChangePrioridadeSelect}>
-              <option value="Baixa">Baixa</option>
-              <option value="Média">Média</option>
-              <option value="Alta">Alta</option>
-              <option value="Urgente">Urgente</option>
-              <option value="Critica">Crítica</option>
-            </select>
-            <label>Técnico</label>
-            <select value={tecnicoAtb} onChange={handleChangeTecnicoSelect}>
-              {loadingTecnicosCadastrados ? (
-                <option value="">Carregando...</option>
-              ) : (
-                <>
-                  <option value="Não atribuído">Não atribuído</option>
-                  {TecnicosCadastrados.map((tecnicosList) => (
-                    <option key={tecnicosList.id} value={tecnicosList.nome}>
-                      {tecnicosList.nome}
-                    </option>
-                  ))}
-                </>
-              )}
-            </select>
+            </div>
 
-            <label>Descrição do problema</label>
-            <textarea
-              type="text"
-              placeholder="Descreva o problema"
-              value={complemento}
-              onChange={(e) => setComplemento(e.target.value)}
-            />
-            <input type="file" onChange={handleFileChange} multiple />
+            <div className="form-group">
+              <label>Equipamento</label>
+              <select
+                value={equipamentoSelecionado}
+                onChange={handleChangeEquipamentoSelect}
+              >
+                <option value="Não informado">Não informado</option>
+                {equipamentos.length > 0 ? (
+                  equipamentos.map((equipamento) => (
+                    <option
+                      key={equipamento.id}
+                      value={`${equipamento.categoria} - ${equipamento.patrimonio}`}
+                    >{`${equipamento.categoria} - ${equipamento.patrimonio}`}</option>
+                  ))
+                ) : (
+                  <option value="">Nenhum equipamento encontrado</option>
+                )}
+              </select>
+            </div>
 
-            {imageUrls.length > 0 && (
-              <div className="image-preview-container">
-                {imageUrls.map((url, index) => (
-                  <div key={index} className="image-preview">
-                    <img
-                      src={url}
-                      alt={`Imagem ${index + 1}`}
-                      width="100"
-                      height="100"
-                    />
-                    <button
-                      type="button"
-                      className="remove-image-button"
-                      onClick={() => handleRemoveImage(index)}
-                    >
-                      X
-                    </button>
-                  </div>
-                ))}
+            <div className="form-group">
+              <label>Status</label>
+              <select
+                name="status"
+                value={status}
+                onChange={handleOptionChange}
+                className="select-status"
+              >
+                <option value="Aberto">Aberto</option>
+                <option value="Progresso">Em progresso</option>
+                <option value="Atendido">Atendido</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Prioridade</label>
+              <select value={prioridade} onChange={handleChangePrioridadeSelect}>
+                <option value="Baixa">Baixa</option>
+                <option value="Média">Média</option>
+                <option value="Alta">Alta</option>
+                <option value="Urgente">Urgente</option>
+                <option value="Critica">Crítica</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Técnicos</label>
+              <div className="tecnicos-list">
+                {loadingTecnicosCadastrados ? (
+                  <p>Carregando...</p>
+                ) : (
+                  TecnicosCadastrados.map((tecnico) => (
+                    <div key={tecnico.id} className="tecnico-item">
+                      <input
+                        type="checkbox"
+                        id={`tecnico-${tecnico.id}`}
+                        value={tecnico.nome}
+                        checked={tecnicosAtb.includes(tecnico.nome)}
+                        onChange={(e) => {
+                          const selected = e.target.value;
+                          setTecnicosAtb((prev) =>
+                            e.target.checked
+                              ? [...prev, selected]
+                              : prev.filter((t) => t !== selected)
+                          );
+                        }}
+                      />
+                      <label htmlFor={`tecnico-${tecnico.id}`}>{tecnico.nome}</label>
+                    </div>
+                  ))
+                )}
               </div>
-            )}
+            </div>
 
-            <button type="submit">Registrar</button>
+            <div className="form-group">
+              <label>Descrição do problema</label>
+              <textarea
+                type="text"
+                placeholder="Descreva o problema"
+                value={complemento}
+                onChange={(e) => setComplemento(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Imagens</label>
+              <input type="file" onChange={handleFileChange} multiple />
+              {imageUrls.length > 0 && (
+                <div className="image-preview-container">
+                  {imageUrls.map((url, index) => (
+                    <div key={index} className="image-preview">
+                      <img
+                        src={url}
+                        alt={`Imagem ${index + 1}`}
+                        width="100"
+                        height="100"
+                      />
+                      <button
+                        type="button"
+                        className="remove-image-button"
+                        onClick={() => handleRemoveImage(index)}
+                      >
+                        X
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button type="submit" className="submit-button">Registrar</button>
           </form>
         </div>
       </div>

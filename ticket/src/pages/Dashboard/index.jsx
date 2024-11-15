@@ -62,6 +62,7 @@ export default function Dashboard() {
   const [tempPrioridadeFilters, setTempPrioridadeFilters] = useState({});
   const [searchTecnico, setSearchTecnico] = useState("");
   const [searchPonto, setSearchPonto] = useState("");
+  const [avatars, setAvatars] = useState({});
 
   useEffect(() => {
     async function loadChamados() {
@@ -70,6 +71,18 @@ export default function Dashboard() {
       let lista = [];
       let statusSet = new Set();
       let prioridadeSet = new Set();
+
+      async function loadAvatars() {
+        const usersSnapshot = await getDocs(collection(db, "users"));
+        let avatarsMap = {};
+
+        usersSnapshot.forEach((doc) => {
+          const userData = doc.data();
+          avatarsMap[userData.nome] = userData.avatarUrl;
+        });
+
+        setAvatars(avatarsMap);
+      }
 
       querySnapshot.forEach((doc) => {
         lista.push({
@@ -85,7 +98,7 @@ export default function Dashboard() {
           complemento: doc.data().complemento,
           dataSolucao: doc.data().dataSolucao,
           horaSolucao: doc.data().horaSolucao,
-          tecnicoAtb: doc.data().tecnicoAtb,
+          tecnicosAtb: doc.data().tecnicosAtb || [], // Atualizado para tecnicosAtb
           imageUrls: doc.data().imageUrls || [],
           imagemSolucao: doc.data().imagemSolucao,
           equipamento: doc.data().equipamento,
@@ -94,6 +107,7 @@ export default function Dashboard() {
         });
 
         statusSet.add(doc.data().status);
+        loadAvatars();
         prioridadeSet.add(doc.data().prioridade);
       });
 
@@ -128,7 +142,6 @@ export default function Dashboard() {
       setLoading(false);
       setStatusOptions(Array.from(statusSet));
       setPrioridadeOptions(Array.from(prioridadeSet));
-
       if (lista.length === 0) {
         setIsEmpty(true);
       }
@@ -180,7 +193,7 @@ export default function Dashboard() {
           complemento: doc.data().complemento,
           dataSolucao: doc.data().dataSolucao,
           horaSolucao: doc.data().horaSolucao,
-          tecnicoAtb: doc.data().tecnicoAtb,
+          tecnicosAtb: doc.data().tecnicosAtb || [], // Atualizado para tecnicosAtb
           imageUrls: doc.data().imageUrls || [],
           imagemSolucao: doc.data().imagemSolucao,
           playChamado: doc.data().playChamado || null,
@@ -235,7 +248,9 @@ export default function Dashboard() {
         statusFilters[chamado.status] &&
         prioridadeFilters[chamado.prioridade] &&
         (!tecnico ||
-          chamado.tecnicoAtb.toLowerCase().includes(tecnico.toLowerCase())) &&
+          chamado.tecnicosAtb.some((tec) =>
+            tec.toLowerCase().includes(tecnico.toLowerCase())
+          )) &&
         (!ponto || chamado.cliente.toLowerCase().includes(ponto.toLowerCase()))
     );
     setChamados(filteredChamados);
@@ -279,12 +294,12 @@ export default function Dashboard() {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
       setSortBy(column);
-      setSortOrder(column === "tecnicoAtb" ? "asc" : "desc"); // Ordem inicial para técnico é ascendente
+      setSortOrder(column === "tecnicosAtb" ? "asc" : "desc"); // Ordem inicial para técnico é ascendente
     }
 
     if (column === "status") {
       setChamados((prevChamados) => sortTicketsByStatus([...prevChamados]));
-    } else if (column === "tecnicoAtb") {
+    } else if (column === "tecnicosAtb") {
       setChamados((prevChamados) => sortTicketsByTecnico([...prevChamados])); // Nova função de ordenação
     } else {
       setChamados((prevChamados) => sortTickets([...prevChamados]));
@@ -293,8 +308,8 @@ export default function Dashboard() {
 
   function sortTicketsByTecnico(tickets) {
     return [...tickets].sort((a, b) => {
-      const tecnicoA = a.tecnicoAtb || ""; // Lidar com casos em que não há técnico atribuído
-      const tecnicoB = b.tecnicoAtb || "";
+      const tecnicoA = a.tecnicosAtb.join(", ") || ""; // Lidar com casos em que não há técnico atribuído
+      const tecnicoB = b.tecnicosAtb.join(", ") || "";
 
       return sortOrder === "asc"
         ? tecnicoA.localeCompare(tecnicoB) // Ordenação alfabética ascendente
@@ -323,13 +338,13 @@ export default function Dashboard() {
       const ticketRef = doc(db, "chamados", ticketId);
 
       updateDoc(ticketRef, {
-        tecnicoAtb: userName,
+        tecnicosAtb: [...(chamados.find(chamado => chamado.id === ticketId).tecnicosAtb || []), userName],
       });
 
       setChamados((prevChamados) =>
         prevChamados.map((chamado) =>
           chamado.id === ticketId
-            ? { ...chamado, tecnicoAtb: userName }
+            ? { ...chamado, tecnicosAtb: [...chamado.tecnicosAtb, userName] }
             : chamado
         )
       );
@@ -425,13 +440,13 @@ export default function Dashboard() {
                 prevChamados.map((chamado) =>
                   chamado.id === id
                     ? {
-                        ...chamado,
-                        playChamado: {
-                          timestamp: formattedTimestamp,
-                          location: new GeoPoint(latitude, longitude),
-                          address,
-                        },
-                      }
+                      ...chamado,
+                      playChamado: {
+                        timestamp: formattedTimestamp,
+                        location: new GeoPoint(latitude, longitude),
+                        address,
+                      },
+                    }
                     : chamado
                 )
               );
@@ -507,13 +522,13 @@ export default function Dashboard() {
                 prevChamados.map((chamado) =>
                   chamado.id === id
                     ? {
-                        ...chamado,
-                        chegadaLocal: {
-                          timestamp: formattedTimestamp,
-                          location: new GeoPoint(latitude, longitude),
-                          address,
-                        },
-                      }
+                      ...chamado,
+                      chegadaLocal: {
+                        timestamp: formattedTimestamp,
+                        location: new GeoPoint(latitude, longitude),
+                        address,
+                      },
+                    }
                     : chamado
                 )
               );
@@ -560,8 +575,8 @@ export default function Dashboard() {
           {chamados.filter(
             (item) =>
               isAdmin ||
-              item.tecnicoAtb === userName ||
-              item.tecnicoAtb === "Não atribuído"
+              item.tecnicosAtb.includes(userName) ||
+              item.tecnicosAtb.length === 0
           ).length === 0 ? (
             <div className="container dashboard">
               <span>Nenhum chamado encontrado...</span>
@@ -693,9 +708,9 @@ export default function Dashboard() {
                         (sortOrder === "asc" ? "▲" : "▼")}
                     </th>
                     <th scope="col">Cadastrado em</th>
-                    <th scope="col" onClick={() => handleSort("tecnicoAtb")}>
-                      Técnico
-                      {sortBy === "tecnicoAtb" &&
+                    <th scope="col" onClick={() => handleSort("tecnicosAtb")}>
+                      Técnicos
+                      {sortBy === "tecnicosAtb" &&
                         (sortOrder === "asc" ? "▲" : "▼")}
                     </th>
                     <th scope="col">#</th>
@@ -706,8 +721,8 @@ export default function Dashboard() {
                     .filter(
                       (item) =>
                         isAdmin ||
-                        item.tecnicoAtb === userName ||
-                        item.tecnicoAtb === "Não atribuído"
+                        item.tecnicosAtb.includes(userName) ||
+                        item.tecnicosAtb.length === 0
                     )
                     .map((item, index) => (
                       <tr key={index}>
@@ -721,8 +736,8 @@ export default function Dashboard() {
                                 item.status === "Aberto"
                                   ? "rgb(53, 131, 246)"
                                   : item.status === "Atendido"
-                                  ? "#5cb85c"
-                                  : "#ffcc00",
+                                    ? "#5cb85c"
+                                    : "#ffcc00",
                               textShadow: "1px 2px 0px #000",
                             }}
                           >
@@ -735,12 +750,12 @@ export default function Dashboard() {
                             style={{
                               backgroundColor:
                                 item.prioridade === "Urgente" ||
-                                item.prioridade === "Critica"
+                                  item.prioridade === "Critica"
                                   ? "#ff0000"
                                   : item.prioridade === "Média" ||
                                     item.prioridade === "Alta"
-                                  ? "#FFCC00"
-                                  : "#5cb85c",
+                                    ? "#FFCC00"
+                                    : "#5cb85c",
                               textShadow: "1px 2px 0px #000",
                             }}
                           >
@@ -748,9 +763,22 @@ export default function Dashboard() {
                           </span>
                         </td>
                         <td data-label="Cadastrado">{item.createdFormat}</td>
-                        <td data-label="Cadastrado">
-                          {item.tecnicoAtb ? item.tecnicoAtb : "Não atribuído"}
+                        <td data-label="Técnicos">
+                          {item.tecnicosAtb.slice(0, 2).map((tecnico, idx) => (
+                            <span key={idx} style={{ display: "inline-block", marginRight: "5px" }}>
+                              {avatars[tecnico] ? (
+                                <img
+                                  src={avatars[tecnico]}
+                                  alt={tecnico}
+                                  style={{ width: "30px", borderRadius: "50%" }}
+                                />
+                              ) : (
+                                <p style={{ display: "inline", margin: 0 }}>{tecnico}</p>
+                              )}
+                            </span>
+                          ))}
                         </td>
+
                         <td data-label="#">
                           <button
                             className="action"
@@ -780,7 +808,7 @@ export default function Dashboard() {
                             onClick={() => assignTicketToSelf(item.id)}
                             disabled={
                               item.status === "Atendido" ||
-                              item.tecnicoAtb === userName
+                              item.tecnicosAtb.includes(userName)
                             }
                           >
                             <FiUserPlus color="#fff" size={15} />

@@ -6,9 +6,9 @@ import { AuthContext } from "../../contexts/auth";
 import { db } from "../../services/firebaseConnection";
 import { collection, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { toast } from "react-toastify";
-import './index.css';  // Importando o arquivo CSS
+import './monitoramento.css';  // Importando o arquivo CSS
 
-export default function Monitoramento ()  {
+export default function Monitoramento() {
   const { user } = useContext(AuthContext);
   const [chamadosAbertos, setChamadosAbertos] = useState([]);
   const [chamadosResolvidosHoje, setChamadosResolvidosHoje] = useState([]);
@@ -29,7 +29,7 @@ export default function Monitoramento ()  {
         const atendidosSnapshot = await getDocs(atendidosQuery);
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0); // Define o início do dia de hoje (meia-noite)
-        
+
         // Filtra chamados resolvidos hoje
         const resolvidosHoje = atendidosSnapshot.docs
           .map(doc => ({ id: doc.id, ...doc.data() }))
@@ -39,7 +39,7 @@ export default function Monitoramento ()  {
               return entry.field === "status" && entry.newValue === "Atendido" && entry.timestamp.toDate() >= hoje;
             });
           });
-          
+
         setChamadosResolvidosHoje(resolvidosHoje);
 
         // Chamados abertos há mais de 24h
@@ -67,56 +67,51 @@ export default function Monitoramento ()  {
           <FiMessageSquare size={25} />
         </Title>
         <div className="container dashboard">
-          <div className="section">
-            <h2>Chamados Abertos</h2>
-            {chamadosAbertos.length === 0 ? (
-              <p>Nenhum chamado aberto.</p>
-            ) : (
-              <ul>
-                {chamadosAbertos.map(chamado => (
-                  <li key={chamado.id}>
-                    <strong>Cliente:</strong> {chamado.cliente} <br />
-                    <strong>Assunto:</strong> {chamado.assunto} <br />
-                    <strong>Prioridade:</strong> {chamado.prioridade} <br />
-                    <strong>Técnico:</strong> {chamado.tecnicoAtb}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div className="section">
-            <h2>Chamados Resolvidos Hoje</h2>
-            {chamadosResolvidosHoje.length === 0 ? (
-              <p>Nenhum chamado resolvido hoje.</p>
-            ) : (
-              <ul>
-                {chamadosResolvidosHoje.map(chamado => (
-                  <li key={chamado.id}>
-                    <strong>Cliente:</strong> {chamado.cliente} <br />
-                    <strong>Assunto:</strong> {chamado.assunto} <br />
-                    <strong>Prioridade:</strong> {chamado.prioridade} <br />
-                    <strong>Técnico:</strong> {chamado.tecnicoAtb}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div className="section">
-            <h2>Chamados Abertos há mais de 24h</h2>
-            {chamadosAbertosMais24h.length === 0 ? (
-              <p>Nenhum chamado aberto há mais de 24h.</p>
-            ) : (
-              <ul>
-                {chamadosAbertosMais24h.map(chamado => (
-                  <li key={chamado.id}>
-                    <strong>Cliente:</strong> {chamado.cliente} <br />
-                    <strong>Assunto:</strong> {chamado.assunto} <br />
-                    <strong>Prioridade:</strong> {chamado.prioridade} <br />
-                    <strong>Técnico:</strong> {chamado.tecnicoAtb}
-                  </li>
-                ))}
-              </ul>
-            )}
+          <div className="monitoramentoSection">
+
+            <div className="section">
+              <h2>Chamados Abertos ({chamadosAbertos.length})</h2>
+              {chamadosAbertos.length === 0 ? (
+                <p>Nenhum chamado aberto.</p>
+              ) : (
+                <ul>
+                  {chamadosAbertos.map(chamado => (
+                    <li key={chamado.id}>
+                      <strong>Cliente:</strong> {chamado.cliente} <br />
+                      <strong>Técnico:</strong> {chamado.tecnicosAtb}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="section">
+              <h2>Chamados Resolvidos Hoje</h2>
+              {chamadosResolvidosHoje.length === 0 ? (
+                <p>Nenhum chamado resolvido hoje.</p>
+              ) : (
+                <ul>
+                  {chamadosResolvidosHoje.map(chamado => (
+                    <li key={chamado.id}>
+                      <strong>Cliente:</strong> {chamado.cliente} <br />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="section">
+              <h2>Chamados Abertos há mais de 24h</h2>
+              {chamadosAbertosMais24h.length === 0 ? (
+                <p>Nenhum chamado aberto há mais de 24h.</p>
+              ) : (
+                <ul>
+                  {chamadosAbertosMais24h.map(chamado => (
+                    <li key={chamado.id}>
+                      <strong>Cliente:</strong> {chamado.cliente} <br />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
       </div>

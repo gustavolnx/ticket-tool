@@ -16,6 +16,10 @@ form textarea {
   font-size: 1.3em;
 }
 
+.form-group{
+  display: flex;
+  flex-direction: column;
+}
 .status {
   margin-bottom: 1em;
 }

@@ -29,12 +29,23 @@ export default function Equipamentos() {
   const [customerSelected, setCustomerSelected] = useState(0);
   const [patrimonio, setPatrimonio] = useState("");
   const [categoria, setCategoria] = useState("Não selecionada");
-  const [status, setStatus] = useState("Aberto");
+  const [status, setStatus] = useState("Em uso");
   const [prioridade, setPrioridade] = useState("Baixa");
   const [idCustomer, setIdCustomer] = useState(false);
   const [compartilhado, setCompartilhado] = useState("Não");
   const [equipamentosPC, setEquipamentosPC] = useState([]);
   const [equipamentoSelecionado, setEquipamentoSelecionado] = useState("");
+
+  // New fields
+  const [tipo, setTipo] = useState("");
+  const [marca, setMarca] = useState("");
+  const [modelo, setModelo] = useState("");
+  const [tamanho, setTamanho] = useState("");
+  const [processador, setProcessador] = useState("");
+  const [memoriaRam, setMemoriaRam] = useState("");
+  const [outrasCaracteristicas, setOutrasCaracteristicas] = useState("");
+  const [dataCompra, setDataCompra] = useState("");
+  const [ultimoResponsavel, setUltimoResponsavel] = useState("");
 
   useEffect(() => {
     async function loadCustomers() {
@@ -112,6 +123,17 @@ export default function Equipamentos() {
   async function handleRegister(e) {
     e.preventDefault();
 
+    // Check for duplicate patrimonio
+    const patrimonioQuery = query(
+      collection(db, "equipamentos"),
+      where("patrimonio", "==", patrimonio)
+    );
+    const patrimonioSnapshot = await getDocs(patrimonioQuery);
+    if (!idCustomer && !patrimonioSnapshot.empty) {
+      toast.error("Número de patrimônio já existe!");
+      return;
+    }
+
     let equipamentoPai = null;
     if (compartilhado === "Sim") {
       const equipamentoPaiData = equipamentosPC.find(
@@ -133,6 +155,16 @@ export default function Equipamentos() {
       compartilhado: compartilhado === "Sim",
       equipamentoPai: equipamentoPai,
       created: new Date(),
+      // New fields
+      tipo: tipo,
+      marca: marca,
+      modelo: modelo,
+      tamanho: tamanho,
+      processador: processador,
+      memoriaRam: memoriaRam,
+      outrasCaracteristicas: outrasCaracteristicas,
+      dataCompra: dataCompra,
+      ultimoResponsavel: ultimoResponsavel,
     };
 
     if (idCustomer) {
@@ -169,7 +201,6 @@ export default function Equipamentos() {
       <Header />
       <div className="content">
         <Title name={id ? "Editando equipamento" : "Novo equipamento"}>
-          {" "}
           <FiPlusCircle size={25} />
         </Title>
         <div className="container">
@@ -202,6 +233,77 @@ export default function Equipamentos() {
               <option value="B-LINK">B-LINK</option>
               <option value="Tela/TV">Tela/TV</option>
             </select>
+
+            {/* New fields */}
+            <label>Tipo</label>
+            <input
+              type="text"
+              placeholder="Digite o tipo"
+              value={tipo}
+              onChange={(e) => setTipo(e.target.value)}
+            />
+            <label>Marca</label>
+            <input
+              type="text"
+              placeholder="Digite a marca"
+              value={marca}
+              onChange={(e) => setMarca(e.target.value)}
+            />
+            <label>Modelo</label>
+            <input
+              type="text"
+              placeholder="Digite o modelo"
+              value={modelo}
+              onChange={(e) => setModelo(e.target.value)}
+            />
+            <label>Tamanho</label>
+            <input
+              type="text"
+              placeholder="Digite o tamanho"
+              value={tamanho}
+              onChange={(e) => setTamanho(e.target.value)}
+            />
+            <label>Processador</label>
+            <input
+              type="text"
+              placeholder="Digite o processador"
+              value={processador}
+              onChange={(e) => setProcessador(e.target.value)}
+            />
+            <label>Memória RAM</label>
+            <input
+              type="text"
+              placeholder="Digite a memória RAM"
+              value={memoriaRam}
+              onChange={(e) => setMemoriaRam(e.target.value)}
+            />
+            <label>Outras Características</label>
+            <textarea
+              placeholder="Descreva outras características"
+              value={outrasCaracteristicas}
+              onChange={(e) => setOutrasCaracteristicas(e.target.value)}
+            />
+            <label>Data de Compra</label>
+            <input
+              type="date"
+              value={dataCompra}
+              onChange={(e) => setDataCompra(e.target.value)}
+            />
+            <label>Status</label>
+            <select value={status} onChange={(e) => setStatus(e.target.value)}>
+              <option value="Em uso">Em uso</option>
+              <option value="Estoque">Estoque</option>
+              <option value="Manutenção">Manutenção</option>
+              <option value="Inativo">Inativo</option>
+            </select>
+            <label>Último Responsável</label>
+            <input
+              type="text"
+              placeholder="Digite o último responsável"
+              value={ultimoResponsavel}
+              onChange={(e) => setUltimoResponsavel(e.target.value)}
+            />
+
             {categoria !== "Não selecionada" && (
               <>
                 <div>
