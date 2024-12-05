@@ -18,9 +18,11 @@ import { FiPlusCircle } from "react-icons/fi";
 import "./equipamentos.css";
 
 // Componente Modal
-function Modal({ isOpen, onClose, onSave, equipamento }) {
+function Modal({ isOpen, onClose, onSave, equipamento, isAdmin }) {
   const [localTipo, setLocalTipo] = useState(equipamento.tipo);
   const [localModelo, setLocalModelo] = useState(equipamento.modelo);
+  const [localStatus, setLocalStatus] = useState(equipamento.status);
+  const [localPonto, setLocalPonto] = useState(equipamento.pontoLocal);
 
   if (!isOpen) return null;
 
@@ -28,19 +30,46 @@ function Modal({ isOpen, onClose, onSave, equipamento }) {
     <div className="modal">
       <div className="modal-content">
         <h2>Editar Equipamento</h2>
-        <label>Tipo</label>
+        {isAdmin && (
+          <>
+            <label>Tipo</label>
+            <input
+              type="text"
+              value={localTipo}
+              onChange={(e) => setLocalTipo(e.target.value)}
+            />
+            <label>Modelo</label>
+            <input
+              type="text"
+              value={localModelo}
+              onChange={(e) => setLocalModelo(e.target.value)}
+            />
+          </>
+        )}
+        <label>Status</label>
         <input
           type="text"
-          value={localTipo}
-          onChange={(e) => setLocalTipo(e.target.value)}
+          value={localStatus}
+          onChange={(e) => setLocalStatus(e.target.value)}
         />
-        <label>Modelo</label>
+        <label>Ponto</label>
         <input
           type="text"
-          value={localModelo}
-          onChange={(e) => setLocalModelo(e.target.value)}
+          value={localPonto}
+          onChange={(e) => setLocalPonto(e.target.value)}
         />
-        <button onClick={() => onSave({ tipo: localTipo, modelo: localModelo })}>Salvar</button>
+        <button
+          onClick={() =>
+            onSave({
+              tipo: localTipo,
+              modelo: localModelo,
+              status: localStatus,
+              pontoLocal: localPonto,
+            })
+          }
+        >
+          Salvar
+        </button>
         <button onClick={onClose}>Fechar</button>
       </div>
     </div>
@@ -76,6 +105,7 @@ export default function Equipamentos() {
   const [outrasCaracteristicas, setOutrasCaracteristicas] = useState("");
   const [dataCompra, setDataCompra] = useState("");
   const [ultimoResponsavel, setUltimoResponsavel] = useState("");
+  const [subPonto, setSubPonto] = useState("");
 
   // Equipment list state
   const [equipamentos, setEquipamentos] = useState([]);
@@ -84,6 +114,8 @@ export default function Equipamentos() {
   const [showForm, setShowForm] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEquipamento, setEditingEquipamento] = useState(null);
+
+  const isAdmin = user.role === "admin";
 
   useEffect(() => {
     async function loadCustomers() {
@@ -152,6 +184,8 @@ export default function Equipamentos() {
         patrimonio: doc.data().patrimonio,
         tipo: doc.data().tipo,
         modelo: doc.data().modelo,
+        status: doc.data().status,
+        subPonto: doc.data().subPonto,
       });
     });
     setEquipamentos(lista);
@@ -234,6 +268,7 @@ export default function Equipamentos() {
       outrasCaracteristicas: outrasCaracteristicas,
       dataCompra: dataCompra,
       ultimoResponsavel: ultimoResponsavel,
+      subPonto: subPonto,
     };
 
     if (idCustomer) {
@@ -270,6 +305,7 @@ export default function Equipamentos() {
     await updateDoc(docRef, {
       ultimoResponsavel: user.uid,
       retiradaTimestamp: new Date(),
+      status: "Em trânsito",
     })
       .then(() => {
         toast.success("Equipamento retirado com sucesso!");
@@ -410,6 +446,7 @@ export default function Equipamentos() {
                 <option value="Estoque">Estoque</option>
                 <option value="Manutenção">Manutenção</option>
                 <option value="Inativo">Inativo</option>
+                <option value="Em trânsito">Em trânsito</option>
               </select>
               <label>Último Responsável</label>
               <input
@@ -417,6 +454,13 @@ export default function Equipamentos() {
                 placeholder="Digite o último responsável"
                 value={ultimoResponsavel}
                 onChange={(e) => setUltimoResponsavel(e.target.value)}
+              />
+              <label>Sub-ponto</label>
+              <input
+                type="text"
+                placeholder="Digite o sub-ponto"
+                value={subPonto}
+                onChange={(e) => setSubPonto(e.target.value)}
               />
 
               {categoria !== "Não selecionada" && (
@@ -474,6 +518,7 @@ export default function Equipamentos() {
                   <th>Patrimônio</th>
                   <th>Tipo</th>
                   <th>Modelo</th>
+                  <th>Status</th>
                   <th>Ações</th>
                 </tr>
               </thead>
@@ -484,6 +529,7 @@ export default function Equipamentos() {
                     <td>{equip.patrimonio}</td>
                     <td>{equip.tipo}</td>
                     <td>{equip.modelo}</td>
+                    <td>{equip.status}</td>
                     <td>
                       <button className="btn-edit" onClick={() => handleEdit(equip.id)}>Editar</button>
                       <button className="btn-retirar" onClick={() => handleRetirada(equip.id)}>Retirar</button>
@@ -502,6 +548,7 @@ export default function Equipamentos() {
           onClose={() => setModalOpen(false)}
           onSave={handleModalSave}
           equipamento={editingEquipamento}
+          isAdmin={isAdmin}
         />
       )}
     </div>
