@@ -14,7 +14,8 @@ import { toast } from "react-toastify";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import Title from "../../components/Title";
-import { FiPlusCircle } from "react-icons/fi";
+import { FiPlusCircle, FiDownload } from "react-icons/fi";
+import * as XLSX from 'xlsx';
 import "./equipamentos.css";
 
 // Componente Modal
@@ -23,6 +24,7 @@ function Modal({ isOpen, onClose, onSave, equipamento, isAdmin }) {
   const [localModelo, setLocalModelo] = useState(equipamento.modelo);
   const [localStatus, setLocalStatus] = useState(equipamento.status);
   const [localPonto, setLocalPonto] = useState(equipamento.pontoLocal);
+  const [localSubPonto, setLocalSubPonto] = useState(equipamento.subPonto || '');
 
   if (!isOpen) return null;
 
@@ -58,6 +60,12 @@ function Modal({ isOpen, onClose, onSave, equipamento, isAdmin }) {
           value={localPonto}
           onChange={(e) => setLocalPonto(e.target.value)}
         />
+        <label>Sub-ponto</label>
+        <input
+          type="text"
+          value={localSubPonto}
+          onChange={(e) => setLocalSubPonto(e.target.value)}
+        />
         <button
           onClick={() =>
             onSave({
@@ -65,6 +73,7 @@ function Modal({ isOpen, onClose, onSave, equipamento, isAdmin }) {
               modelo: localModelo,
               status: localStatus,
               pontoLocal: localPonto,
+              subPonto: localSubPonto,
             })
           }
         >
@@ -116,6 +125,32 @@ export default function Equipamentos() {
   const [editingEquipamento, setEditingEquipamento] = useState(null);
 
   const isAdmin = user.role === "admin";
+
+  // Function to export to Excel
+  const exportToExcel = () => {
+    const dataToExport = filteredEquipamentos.map(equip => ({
+      Ponto: equip.pontoLocal,
+      'Sub-ponto': equip.subPonto || '',
+      Patrimônio: equip.patrimonio,
+      Tipo: equip.tipo,
+      Modelo: equip.modelo,
+      Status: equip.status,
+      'Data de Compra': equip.dataCompra || '',
+      'Último Responsável': equip.ultimoResponsavel || '',
+      Categoria: equip.categoria || '',
+      Marca: equip.marca || '',
+      Processador: equip.processador || '',
+      'Memória RAM': equip.memoriaRam || '',
+      'Outras Características': equip.outrasCaracteristicas || ''
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Equipamentos");
+    
+    // Save the file
+    XLSX.writeFile(wb, "equipamentos.xlsx");
+  };
 
   useEffect(() => {
     async function loadCustomers() {
@@ -186,6 +221,13 @@ export default function Equipamentos() {
         modelo: doc.data().modelo,
         status: doc.data().status,
         subPonto: doc.data().subPonto,
+        dataCompra: doc.data().dataCompra,
+        ultimoResponsavel: doc.data().ultimoResponsavel,
+        categoria: doc.data().categoria,
+        marca: doc.data().marca,
+        processador: doc.data().processador,
+        memoriaRam: doc.data().memoriaRam,
+        outrasCaracteristicas: doc.data().outrasCaracteristicas
       });
     });
     setEquipamentos(lista);
@@ -345,9 +387,15 @@ export default function Equipamentos() {
           <FiPlusCircle size={25} />
         </Title>
         <div className="container">
-          <button className="btn-add" onClick={() => setShowForm(!showForm)}>
-            Adicionar Equipamento
-          </button>
+          <div className="actions-row">
+            <button className="btn-add" onClick={() => setShowForm(!showForm)}>
+              Adicionar Equipamento
+            </button>
+            <button className="btn-export" onClick={exportToExcel}>
+              <FiDownload /> Exportar para Excel
+            </button>
+          </div>
+
           {showForm && (
             <form className="form-profile" onSubmit={handleRegister}>
               <label>Ponto</label>
@@ -376,7 +424,7 @@ export default function Equipamentos() {
               />
               <label>Categoria</label>
               <select value={categoria} onChange={handleChangeSelect}>
-                <option value="Não selecionada">Não selecionada</option>
+              <option value="Não selecionada">Não selecionada</option>
                 <option value="Computador">Computador</option>
                 <option value="B-LINK">B-LINK</option>
                 <option value="Tela/TV">Tela/TV</option>
@@ -500,7 +548,9 @@ export default function Equipamentos() {
                   )}
                 </>
               )}
-              <button type="submit" className="btn-register">Registrar</button>
+              <button type="submit" className="btn-register">
+                Registrar
+              </button>
             </form>
           )}
 
@@ -510,11 +560,13 @@ export default function Equipamentos() {
               placeholder="Buscar por patrimônio"
               value={searchTerm}
               onChange={handleSearchChange}
+              className="search-input"
             />
             <table>
               <thead>
                 <tr>
                   <th>Ponto</th>
+                  <th>Sub-ponto</th>
                   <th>Patrimônio</th>
                   <th>Tipo</th>
                   <th>Modelo</th>
@@ -526,13 +578,18 @@ export default function Equipamentos() {
                 {filteredEquipamentos.map((equip) => (
                   <tr key={equip.id}>
                     <td>{equip.pontoLocal}</td>
+                    <td>{equip.subPonto || '-'}</td>
                     <td>{equip.patrimonio}</td>
                     <td>{equip.tipo}</td>
                     <td>{equip.modelo}</td>
                     <td>{equip.status}</td>
                     <td>
-                      <button className="btn-edit" onClick={() => handleEdit(equip.id)}>Editar</button>
-                      <button className="btn-retirar" onClick={() => handleRetirada(equip.id)}>Retirar</button>
+                      <button className="btn-edit" onClick={() => handleEdit(equip.id)}>
+                        Editar
+                      </button>
+                      <button className="btn-retirar" onClick={() => handleRetirada(equip.id)}>
+                        Retirar
+                      </button>
                     </td>
                   </tr>
                 ))}
